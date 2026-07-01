@@ -1,9 +1,12 @@
-# Virtual Environment
-venv/
-
-# Python cache
+# Python
 __pycache__/
 *.pyc
+
+# Virtual Environment
+backend/venv/
+
+# Runtime uploads
+backend/uploads/
 
 # Environment variables
 .env
