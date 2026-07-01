@@ -2,6 +2,7 @@ import os
 import shutil
 
 from fastapi import APIRouter, UploadFile, File
+from services.pdf_service import extract_text_from_pdf
 
 router = APIRouter()
 
@@ -19,7 +20,15 @@ def upload_report(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    extracted_text = extract_text_from_pdf(file_path)
+
+    
+
+    report = extract_text_from_pdf(file_path)
+
+    print(report)
+
     return {
-        "message": "Report uploaded successfully",
-        "filename": file.filename
-    }
+    "message": "Report uploaded successfully",
+    "report": report
+     }
