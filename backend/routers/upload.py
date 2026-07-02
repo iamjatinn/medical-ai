@@ -2,6 +2,7 @@ import os
 import shutil
 
 from fastapi import APIRouter, UploadFile, File
+from services.medical_report_service import process_medical_report
 from services.pdf_service import extract_text_from_pdf
 
 router = APIRouter()
@@ -24,11 +25,10 @@ def upload_report(file: UploadFile = File(...)):
 
     
 
-    report = extract_text_from_pdf(file_path)
+    result = process_medical_report(file_path)
 
-    print(report)
 
     return {
     "message": "Report uploaded successfully",
-    "report": report
+    "result": result
      }
