@@ -21,3 +21,12 @@
 - AI-generated medical report summary
 - Modular service architecture
 - Structured JSON API response
+### Day 4
+- Input file validation
+- Exception handling and graceful AI failure handling
+- Application logging
+- Pydantic response models
+- Fully typed API response schemas
+- Improved prompt engineering
+- Separate prompt template architecture
+- Cleaner API and service architecture
