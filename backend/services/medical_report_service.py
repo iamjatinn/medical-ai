@@ -4,7 +4,7 @@ from services.normalizer_service import normalize_report
 from services.rule_engine import analyze_report
 from services.ai_service import explain_report
 
-def process_medical_report(file_path):
+def process_medical_report(file_path,rag):
 
     text = extract_text_from_pdf(file_path)
 
@@ -12,11 +12,11 @@ def process_medical_report(file_path):
 
     normalized_report = normalize_report(parsed_report)
 
-    analyzed_report = analyze_report(normalized_report)
+   
 
     findings = analyze_report(normalized_report)
 
-    ai_summary = explain_report(findings)
+    ai_summary = explain_report(findings,rag)
 
 
     return {

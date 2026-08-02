@@ -1,13 +1,23 @@
 import json
 
 from services.gemini_service import generate_response
-from services.knowledge_service import retrieve_knowledge
+from services.rag_knowledge_service import retrieve_knowledge
 from prompts.report_prompt import REPORT_PROMPT
 
 
-def explain_report(findings):
+def explain_report(findings,rag):
 
-    knowledge = retrieve_knowledge(findings)
+    knowledge = retrieve_knowledge(findings,rag)
+
+    print("\n========== RETRIEVED KNOWLEDGE ==========\n")
+
+    for i, chunk in enumerate(knowledge, start=1):
+
+        print(f"Chunk {i}:")
+
+        print(chunk)
+
+        print("-" * 60)
 
     report_data = {
         "findings": findings,
