@@ -1,12 +1,13 @@
 import logging
 
 from sentence_transformers import SentenceTransformer
+from config import EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
 logger.info("Loading embedding model...")
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer(EMBEDDING_MODEL)
 
 logger.info("Embedding model loaded.")
 

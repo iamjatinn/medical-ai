@@ -1,9 +1,13 @@
 import logging
 
+from config import CHUNK_SIZE
+
 logger = logging.getLogger(__name__)
 
+CHUNK_OVERLAP = 50
 
-def chunk_text(text: str, chunk_size=500):
+
+def chunk_text(text: str, chunk_size=CHUNK_SIZE):
 
     logger.info("Splitting document into chunks.")
 
@@ -13,11 +17,13 @@ def chunk_text(text: str, chunk_size=500):
 
     while start < len(text):
 
-        chunk = text[start:start + chunk_size]
+        end = start + chunk_size
+
+        chunk = text[start:end]
 
         chunks.append(chunk)
 
-        start += chunk_size
+        start += (chunk_size - CHUNK_OVERLAP)
 
     logger.info(f"{len(chunks)} chunks created.")
 

@@ -1,4 +1,6 @@
 import logging
+from config import TOP_K
+from services.query_builder import build_query
 
 logger = logging.getLogger(__name__)
 
@@ -11,14 +13,11 @@ def retrieve_knowledge(findings, rag):
 
     for finding in findings:
 
-        query = (
-            f"{finding['calculated_status']} "
-            f"{finding['parameter']}"
-        )
+        query = build_query(finding)
 
         logger.info(f"Searching for: {query}")
 
-        results = rag.search(query, k=3)
+        results = rag.search(query, k=TOP_K)
 
         for result in results:
 

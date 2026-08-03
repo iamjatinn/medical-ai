@@ -42,3 +42,14 @@
 - Refactored architecture to use a shared FAISS index across the application
 - Improved backend modularity with dedicated RAG services
 - Successfully connected Retrieval-Augmented Generation (RAG) with Gemini for contextual medical report explanations
+
+## Day 6
+- Added centralized configuration management using `config.py`
+- Removed hardcoded values from multiple services
+- Improved chunking service with configurable chunk size
+- Implemented persistent FAISS vector index (save/load functionality)
+- Added automatic index initialization logic
+- Refactored RAG pipeline for better dependency management
+- Introduced dedicated query builder service for semantic search
+- Improved retrieval queries for better RAG accuracy
+- Enhanced backend architecture with cleaner service separation

@@ -2,6 +2,7 @@ import logging
 import pickle
 import faiss
 import numpy as np
+from config import VECTOR_INDEX_PATH, DOCUMENT_STORE_PATH
 
 from services.embedding_service import generate_embedding
 
@@ -70,11 +71,11 @@ class RAGService:
 
         faiss.write_index(
             self.index,
-            "vector_store/medical.index"
+            "VECTOR_INDEX_PATH"
         )
 
         with open(
-            "vector_store/documents.pkl",
+            " DOCUMENT_STORE_PATH",
             "wb"
         ) as file:
 
@@ -86,12 +87,12 @@ class RAGService:
     def load(self):
 
         self.index = faiss.read_index(
-        "vector_store/medical.index"
+            VECTOR_INDEX_PATH
         )
 
         with open(
-        "vector_store/documents.pkl",
-        "rb"
+            DOCUMENT_STORE_PATH,
+            "rb"
         ) as file:
 
             self.documents = pickle.load(file)
