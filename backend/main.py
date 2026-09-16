@@ -1,28 +1,41 @@
-import logging
-
 from fastapi import FastAPI
-from routers.upload import router
-from services.index_builder import build_index
+from fastapi.middleware.cors import CORSMiddleware
 
-# Configure logging for the entire application
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-)
+from routers.upload import router as upload_router
+from routers.chat import router as chat_router
+
+from services.index_builder import build_index
 
 app = FastAPI(
     title="Medical AI API",
-    description="AI-powered medical report analyzer",
-    version="0.1.0"
+    description="AI-powered Medical Report Analyzer",
+    version="1.0.0"
 )
+
+# ---------------- CORS ---------------- #
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# -------------------------------------- #
+
+app.include_router(upload_router)
+app.include_router(chat_router)
+
 app.state.rag = build_index()
-app.include_router(router)
 
 
 @app.get("/")
 def home():
-    logging.getLogger(__name__).info("Home endpoint accessed")
 
     return {
-        "message": "Welcome to Medical AI"
+        "message": "Medical AI Backend Running"
     }

@@ -2,13 +2,7 @@ import os
 import shutil
 import logging
 
-from fastapi import (
-    APIRouter,
-    UploadFile,
-    File,
-    HTTPException,
-    Request
-)
+from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from models.response_models import ReportResponse
 from services.medical_report_service import process_medical_report
@@ -22,20 +16,15 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-@router.post("/upload-report", response_model=ReportResponse)
-def upload_report(
-    request: Request,
-    file: UploadFile = File(...)
-):
+@router.post(
+    "/upload-report",
+    response_model=ReportResponse
+)
+def upload_report(file: UploadFile = File(...)):
 
     logger.info(f"Received file: {file.filename}")
 
-    # Allow only PDF files
     if file.content_type != "application/pdf":
-
-        logger.warning(
-            f"Invalid file type uploaded: {file.content_type}"
-        )
 
         raise HTTPException(
             status_code=400,
@@ -50,32 +39,24 @@ def upload_report(
         )
 
         with open(file_path, "wb") as buffer:
+
             shutil.copyfileobj(
                 file.file,
                 buffer
             )
 
-        logger.info(f"File saved successfully: {file_path}")
-
-        result = process_medical_report(
-            file_path=file_path,
-            rag=request.app.state.rag
-        )
-
-        logger.info("Medical report processed successfully.")
+        result = process_medical_report(file_path)
 
         return {
             "message": "Report uploaded successfully",
             "result": result
         }
 
-    except Exception:
+    except Exception as e:
 
-        logger.exception(
-            "Error while processing medical report."
-        )
+        logger.exception(e)
 
         raise HTTPException(
             status_code=500,
-            detail="Internal server error while processing the report."
+            detail=str(e)
         )

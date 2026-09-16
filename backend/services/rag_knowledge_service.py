@@ -1,11 +1,16 @@
 import logging
-from config import TOP_K
+
+from services.index_builder import build_index
 from services.query_builder import build_query
+from config import TOP_K
 
 logger = logging.getLogger(__name__)
 
+# Build/load the FAISS index once
+rag = build_index()
 
-def retrieve_knowledge(findings, rag):
+
+def retrieve_knowledge(findings):
 
     logger.info("Retrieving knowledge using FAISS.")
 
@@ -21,8 +26,11 @@ def retrieve_knowledge(findings, rag):
 
         for result in results:
 
-            knowledge.append(result["text"])
+            if isinstance(result, dict):
+                knowledge.append(result["text"])
+            else:
+                knowledge.append(result)
 
-    logger.info(f"Retrieved {len(knowledge)} chunks.")
+    logger.info(f"Retrieved {len(knowledge)} knowledge chunks.")
 
     return knowledge

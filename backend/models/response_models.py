@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List
 
 
 class ReferenceRange(BaseModel):
@@ -17,7 +18,10 @@ class Finding(BaseModel):
 
 
 class ReportResult(BaseModel):
-    findings: list[Finding]
+    report_id: str
+    filename: str
+    created_at: str
+    findings: List[Finding]
     ai_summary: str
 
 

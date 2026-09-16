@@ -5,9 +5,9 @@ from services.rag_knowledge_service import retrieve_knowledge
 from prompts.report_prompt import REPORT_PROMPT
 
 
-def explain_report(findings,rag):
+def explain_report(findings):
 
-    knowledge = retrieve_knowledge(findings,rag)
+    knowledge = retrieve_knowledge(findings)
 
     print("\n========== RETRIEVED KNOWLEDGE ==========\n")
 

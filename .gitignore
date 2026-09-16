@@ -13,3 +13,7 @@ backend/uploads/
 
 # VS Code
 .vscode/
+
+reports/
+
+vector_store/
