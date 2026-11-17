@@ -8,6 +8,8 @@ Upload a text-based lab report (PDF) and get:
 
 > ⚠️ Educational project. It is **not** a medical device and does not give diagnoses. Always consult a doctor.
 
+**Live demo (free tiers):** [medical-ai-plum.vercel.app](https://medical-ai-plum.vercel.app) (React on Vercel) → [FastAPI on Render](https://medical-ai-api-ehde.onrender.com) → PostgreSQL on Neon. The backend sleeps when idle, so the first request after a pause can take about 50 seconds. Use sample reports only (`data/sample_reports/`); do not upload real medical data.
+
 **Stack:** FastAPI · PyMuPDF · Sentence-Transformers · FAISS · Google Gemini · React + Vite + Tailwind
 
 ---
