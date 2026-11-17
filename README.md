@@ -173,6 +173,39 @@ Errors are explicit: `400` not a PDF, `401` not logged in, `404` unknown or not 
 - The Gemini client is created lazily; failures return a friendly message instead of a stack trace.
 - Chat prompt refuses off-topic questions and never diagnoses or prescribes.
 
+## Bugs found and how they were fixed
+
+Every item below was a real failure found while building or testing, with what caused it and what changed. Most have a regression test, so they cannot come back silently.
+
+### Found by the synthetic-report evaluation
+
+| Symptom | Root cause | Fix (file) |
+|---|---|---|
+| Only 73 % of tests found on the first run | The PDF font turned the dash in `98 - 107` into a middle dot, so the range regex never matched | Added `RANGE_SEPARATORS` (hyphen, en/em dash, minus, middle dot, `~`, `to`) and used it in both the parser and the normaliser (`parser_service.py`, `normalizer_service.py`) |
+| `25-OH Vitamin D` skipped | The test-name pattern had to start with a letter | Allow an optional leading `digits-` prefix in row and cell patterns (`parser_service.py`) |
+| `eGFR` skipped | The unit `mL/min/1.73m2` contains digits and sat on the same line as the range (`mL/min/1.73m2 > 60`), which the cell layout did not expect | New `UNIT_RANGE_LINE_RE` handles a "unit + range" line |
+| `WHITE BLOOD CELL COUNT 10.2` skipped | Name and value were on one line with the unit on the next | New `NAME_VALUE_RE` handles that layout |
+| Unit read as `L U/L` and `L mL/min/1.73m2` | A flag letter glued to the value (`27 L`, then `U/L` on the next line) was treated as part of the unit | New `VALUE_FLAG_RE` splits the flag off the value and uses it as the status |
+| Abnormal `TG`, `HCT`, `HDL-C`, `FBS`, `PLT`, `Hb`, `PCV` found no explanation page (coverage 95 %) | The knowledge pages use full names; the search query used the printed abbreviation | `expand_abbreviations` spells the abbreviation out in the query and keeps the original (`query_builder.py`). Coverage 100 % |
+
+Lesson from this round: after tuning on one random seed the parser scored 100 %, but a fresh seed found three more misses. Always test on data you did not tune on.
+
+### Found while building the app
+
+| Symptom | Root cause | Fix |
+|---|---|---|
+| AI answers ignored the report | The `{report}` placeholder was missing from `REPORT_PROMPT` | Restored it and added a regression test (`test_prompt.py`) |
+| The FAISS index was rebuilt on every start | `save()` wrote literal strings instead of the configured paths, so nothing persisted | Use the config paths; the index also stores a content fingerprint and rebuilds only when documents, backend or manifest change |
+| Gemini error "JSON mode not enabled for api version v1" | The client used API version `v1`, which has no structured output | Client uses `v1beta`, with a regression test |
+| Gemini 429 / 503 / 404 stopped the app | One model, no fallback | `GEMINI_MODELS` chain: 503, 429, 404 or a timeout moves to the next model; 400, 401 and 403 raise (real errors) (`gemini_service.py`) |
+| API errors counted as failed agent answers in the eval | The eval treated any non-answer as a failure | Errors are reported as `ERROR` and excluded from the score |
+| Chat said "fasting glucose" was not in the report | Exact-name lookup; the report listed "Glucose (Fasting)" | Fuzzy token matching plus an alias table (`tools_service.py`) |
+| Aliases silently did nothing | A hidden backspace character (`\x08`) from an escape mistake turned `\b` into a control character in a regex | Replaced with lookarounds `(?<![a-z0-9])...(?![a-z0-9])`; checked the file for other control characters |
+| `status_check` agent case failed on a correct answer ("above the reference range") | My check only accepted the word "high" | Widened to "above" / "elevated". README keeps the honest history: 13/14 unbiased, 14/14 baseline |
+| An eval run overwrote the committed `retrieval.json` | Results are written to a fixed path | Restored from git; result files for runs you do not want to keep should not be committed |
+| Docker "No such image" and `docker` not found | Build and `up` ran out of order; Docker's `bin` folder was missing from PATH in that shell | Build first, then `up`; refresh PATH |
+| Passwords or weak secrets in production | A guessable `JWT_SECRET` would have been accepted | `APP_ENV=production` refuses to start with a weak secret; in dev an empty secret means a random per-start secret |
+
 ## Known limitations (honest list)
 
 - **PDF layouts:** the parser understands "one test per line" and "one table cell per line" layouts. Reports with very different layouts, multi-column pages or scanned images (no OCR) are not supported yet and return a clear `422`.
