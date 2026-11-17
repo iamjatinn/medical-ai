@@ -2,6 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
+from models.analysis_models import ReportAnalysis
+
 
 class ReferenceRange(BaseModel):
     min: Optional[float] = None
@@ -23,7 +25,8 @@ class ReportResult(BaseModel):
     filename: str
     created_at: str
     findings: List[Finding]
-    ai_summary: str
+    ai_summary: str                              # readable text version
+    analysis: Optional[ReportAnalysis] = None    # validated structured version
 
 
 class ReportResponse(BaseModel):

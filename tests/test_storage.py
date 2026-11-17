@@ -62,6 +62,50 @@ class StorageTests(unittest.TestCase):
         self.assertIsNone(loaded["findings"][1]["status_match"])
         self.assertEqual(loaded["chat_history"], [])
 
+    def test_structured_analysis_is_stored_as_json(self):
+
+        analysis = {"overall_risk": "mild", "abnormal_findings": [{"parameter": "Hemoglobin"}]}
+
+        saved = storage.save_report("lab.pdf", FINDINGS, "summary", analysis=analysis)
+
+        self.assertEqual(storage.load_report(saved["report_id"])["analysis"], analysis)
+
+        # a report saved without analysis (AI failed) still loads
+        plain = storage.save_report("lab2.pdf", FINDINGS, "AI is down")
+        self.assertIsNone(storage.load_report(plain["report_id"])["analysis"])
+
+    def test_old_table_without_analysis_column_is_migrated(self):
+        """The Postgres table created before structured outputs has no
+        'analysis' column; init_db() must add it without losing data."""
+
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+
+        old_engine = database.make_engine(f"sqlite:///{Path(folder.name, 'old.db').as_posix()}")
+        self.addCleanup(old_engine.dispose)
+
+        with old_engine.begin() as connection:
+            connection.exec_driver_sql(
+                "CREATE TABLE reports (id VARCHAR(36) PRIMARY KEY, filename VARCHAR(255), "
+                "ai_summary TEXT, created_at DATETIME)"
+            )
+            connection.exec_driver_sql(
+                "INSERT INTO reports VALUES ('11111111-1111-4111-8111-111111111111', "
+                "'old.pdf', 'old summary', '2026-01-01 00:00:00')"
+            )
+
+        self.assertNotIn("analysis", {c["name"] for c in inspect(old_engine).get_columns("reports")})
+
+        database.init_db(old_engine)
+        database.init_db(old_engine)          # running it twice must be harmless
+
+        self.assertIn("analysis", {c["name"] for c in inspect(old_engine).get_columns("reports")})
+
+        with old_engine.connect() as connection:
+            row = connection.exec_driver_sql("SELECT filename, analysis FROM reports").fetchone()
+
+        self.assertEqual(tuple(row), ("old.pdf", None))
+
     def test_chat_history_is_saved_in_order(self):
 
         report = storage.save_report("lab.pdf", FINDINGS, "s")

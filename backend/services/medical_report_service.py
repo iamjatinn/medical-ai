@@ -34,14 +34,15 @@ def process_medical_report(file_path, original_filename=None):
             "reference range, so they could not be analysed."
         )
 
-    # Step 5 - Generate AI summary
-    ai_summary = explain_report(findings)
+    # Step 5 - Generate the AI explanation (structured JSON + readable text)
+    explanation = explain_report(findings)
 
     # Step 6 - Save report
     report = save_report(
         filename=original_filename or os.path.basename(file_path),
         findings=findings,
-        ai_summary=ai_summary,
+        ai_summary=explanation["summary"],
+        analysis=explanation["analysis"],
     )
 
     # Step 7 - Return response
@@ -51,4 +52,5 @@ def process_medical_report(file_path, original_filename=None):
         "created_at": report["created_at"],
         "findings": report["findings"],
         "ai_summary": report["ai_summary"],
+        "analysis": report["analysis"],
     }

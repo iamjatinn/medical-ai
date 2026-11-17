@@ -42,18 +42,20 @@ def _to_dict(report: Report) -> dict:
             for f in report.findings
         ],
         "ai_summary": report.ai_summary,
+        "analysis": report.analysis,
         "chat_history": [
             {"role": m.role, "content": m.content} for m in report.messages
         ],
     }
 
 
-def save_report(filename, findings, ai_summary):
+def save_report(filename, findings, ai_summary, analysis=None):
 
     report = Report(
         id=str(uuid.uuid4()),
         filename=filename[:255],
         ai_summary=ai_summary,
+        analysis=analysis,
         findings=[
             Finding(
                 position=position,

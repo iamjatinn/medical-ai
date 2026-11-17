@@ -7,7 +7,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
@@ -22,7 +22,8 @@ class Report(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)        # UUID
     filename: Mapped[str] = mapped_column(String(255))
-    ai_summary: Mapped[str] = mapped_column(Text)
+    ai_summary: Mapped[str] = mapped_column(Text)                         # readable text version
+    analysis: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # validated structured version
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     findings: Mapped[list["Finding"]] = relationship(

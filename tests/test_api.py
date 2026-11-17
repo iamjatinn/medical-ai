@@ -37,7 +37,10 @@ class ApiTests(unittest.TestCase):
             mock.patch.object(database, "SessionLocal", sessionmaker(bind=engine, expire_on_commit=False)),
             mock.patch.object(upload_router, "UPLOAD_DIR", self.uploads),
             # no Gemini / FAISS needed for these tests
-            mock.patch("services.medical_report_service.explain_report", return_value="test summary"),
+            mock.patch(
+                "services.medical_report_service.explain_report",
+                return_value={"summary": "test summary", "analysis": None},
+            ),
         ):
             patcher.start()
             self.addCleanup(patcher.stop)
