@@ -26,7 +26,16 @@ INDEX_META_PATH = VECTOR_STORE_DIR / "meta.json"
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "sentence-transformers")   # or "fastembed" (no PyTorch)
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")   # override per environment
+# Models are tried in this order; if one is overloaded (503), out of quota (429)
+# or retired (404), the next one is used. Set GEMINI_MODELS="a,b,c" to change it.
+DEFAULT_GEMINI_MODELS = "gemini-3.1-flash-lite,gemini-3.6-flash,gemini-2.5-flash"
+GEMINI_MODELS = [
+    name.strip()
+    for name in (os.getenv("GEMINI_MODELS") or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODELS).split(",")
+    if name.strip()
+]
+GEMINI_MODEL = GEMINI_MODELS[0]                                   # the preferred model
+GEMINI_TIMEOUT_SECONDS = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "60"))   # a hung model fails over instead of blocking
 
 # ---------------- RAG ---------------- #
 

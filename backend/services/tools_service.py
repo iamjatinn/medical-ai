@@ -9,6 +9,7 @@ people's reports no matter what the user types.
 """
 
 import logging
+import re
 
 from google.genai import types
 
@@ -18,6 +19,41 @@ from services.rag_knowledge_service import get_rag
 logger = logging.getLogger(__name__)
 
 MAX_QUERY_CHARS = 300
+
+# Everyday names the model (or the user) may use for a test -> the name used in reports.
+ALIASES = {
+    "blood sugar": "glucose",
+    "sugar": "glucose",
+    "haemoglobin": "hemoglobin",
+    "hb": "hemoglobin",
+    "hgb": "hemoglobin",
+    "white blood cell": "wbc",
+    "white blood cells": "wbc",
+    "leukocytes": "wbc",
+    "red blood cell": "rbc",
+    "red blood cells": "rbc",
+    "erythrocytes": "rbc",
+    "thrombocytes": "platelets",
+    "platelet": "platelets",
+    "vit d": "vitamin d",
+}
+
+
+def _tokens(name: str) -> list:
+    """'Glucose (Fasting)' -> ['glucose', 'fasting'] (lower case, punctuation removed)."""
+
+    return re.findall(r"[a-z0-9]+", str(name).lower())
+
+
+def _canonical(name: str) -> list:
+    """Tokens of a test name after replacing everyday synonyms."""
+
+    text = " ".join(_tokens(name))
+
+    for phrase, replacement in sorted(ALIASES.items(), key=lambda item: -len(item[0])):
+        text = re.sub(rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])", replacement, text)
+
+    return text.split()
 
 
 def _range_text(reference_range) -> str:
@@ -74,18 +110,41 @@ class ReportTools:
         return {"count": len(items), "findings": items}
 
     def _find(self, parameter: str):
+        """Find a test by name, forgiving about word order, punctuation, case and
+        everyday synonyms ("fasting glucose" -> "Glucose (Fasting)")."""
 
-        name = str(parameter).strip().lower()
+        wanted = _canonical(parameter)
 
-        for finding in self.findings:
-            if finding["parameter"].lower() == name:
+        if not wanted or len("".join(wanted)) < 2:
+            return None
+
+        candidates = [(finding, _canonical(finding["parameter"])) for finding in self.findings]
+
+        # 1) the same words, in any order
+        for finding, tokens in candidates:
+            if sorted(tokens) == sorted(wanted):
                 return finding
 
-        for finding in self.findings:                       # partial match, e.g. "glucose"
-            if name and name in finding["parameter"].lower():
-                return finding
+        # 2) every requested word appears in the report's name (fewest extra words wins)
+        containing = [(len(tokens) - len(wanted), finding) for finding, tokens in candidates
+                      if set(wanted) <= set(tokens)]
+        if containing:
+            return min(containing, key=lambda item: item[0])[1]
+
+        # 3) the report's name is contained in what was asked ("my hemoglobin level")
+        inside = [(len(tokens), finding) for finding, tokens in candidates
+                  if tokens and set(tokens) <= set(wanted)]
+        if inside:
+            return max(inside, key=lambda item: item[0])[1]
 
         return None
+
+    def _not_found(self, parameter: str) -> dict:
+
+        return {
+            "error": f"'{parameter}' is not in this report",
+            "available_parameters": [f["parameter"] for f in self.findings],
+        }
 
     def get_parameter_details(self, parameter: str) -> dict:
         """Exact value, unit, reference range and status of one test."""
@@ -93,10 +152,7 @@ class ReportTools:
         finding = self._find(parameter)
 
         if finding is None:
-            return {
-                "error": f"'{parameter}' is not in this report",
-                "available_parameters": [f["parameter"] for f in self.findings],
-            }
+            return self._not_found(parameter)
 
         return _summary(finding)
 
@@ -106,7 +162,7 @@ class ReportTools:
         finding = self._find(parameter)
 
         if finding is None:
-            return {"error": f"'{parameter}' is not in this report"}
+            return self._not_found(parameter)
 
         value = finding["value"]
         low, high = finding["reference_range"]["min"], finding["reference_range"]["max"]

@@ -13,7 +13,6 @@ import logging
 
 from google.genai import types
 
-from config import GEMINI_MODEL
 from services import gemini_service
 from services.tools_service import TOOL_DECLARATIONS, ReportTools
 
@@ -67,16 +66,14 @@ def run_agent(
 
     for step in range(1, max_steps + 1):
 
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=contents,
-            config=_config(system_instruction),
+        response, model_used = gemini_service.generate_with_fallback(
+            client=client, contents=contents, config=_config(system_instruction),
         )
 
         calls = response.function_calls
 
         if not calls:
-            return {"answer": (response.text or "").strip(), "tools_used": tools_used, "steps": step}
+            return {"answer": (response.text or "").strip(), "tools_used": tools_used, "steps": step, "model": model_used}
 
         # Keep the model's own "I want to call these tools" turn in the conversation...
         contents.append(response.candidates[0].content)
@@ -100,10 +97,8 @@ def run_agent(
     # Step limit reached: ask for a final answer from what was gathered, with no tools.
     logger.warning("Agent hit the %d-step limit; asking for a final answer", max_steps)
 
-    final = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=contents,
-        config=_config(system_instruction, with_tools=False),
+    final, model_used = gemini_service.generate_with_fallback(
+        client=client, contents=contents, config=_config(system_instruction, with_tools=False),
     )
 
-    return {"answer": (final.text or "").strip(), "tools_used": tools_used, "steps": max_steps}
+    return {"answer": (final.text or "").strip(), "tools_used": tools_used, "steps": max_steps, "model": model_used}

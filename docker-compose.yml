@@ -27,7 +27,8 @@ services:
       - backend/.env              # holds GEMINI_API_KEY (never baked into the image)
     environment:
       CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
-      GEMINI_MODEL: "${GEMINI_MODEL:-gemini-2.5-flash}"   # e.g. set to gemini-2.5-flash-lite if you hit quota limits
+      # Models are tried in order; an overloaded (503), out-of-quota (429) or retired (404) model is skipped.
+      GEMINI_MODELS: "${GEMINI_MODELS:-gemini-3.1-flash-lite,gemini-3.6-flash,gemini-2.5-flash}"
       # Secret used to sign login tokens. Empty = a random one per start (fine for
       # local use; everyone is logged out on restart). For a real deployment set a
       # long random value, e.g.:  JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))")

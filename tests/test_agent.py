@@ -36,6 +36,42 @@ class ToolTests(unittest.TestCase):
         self.assertEqual(self.tools.get_parameter_details("glucose")["parameter"], "Glucose (Fasting)")
         self.assertEqual(self.tools.get_parameter_details("Vitamin D")["reference_range"], "30 - 100")
 
+    def test_name_matching_ignores_word_order_punctuation_and_synonyms(self):
+        """Regression: the model asked for "fasting glucose" but the report says
+        "Glucose (Fasting)", and the assistant wrongly claimed it was missing."""
+
+        cases = {
+            "fasting glucose": "Glucose (Fasting)",
+            "Glucose (Fasting)": "Glucose (Fasting)",
+            "glucose": "Glucose (Fasting)",
+            "blood sugar": "Glucose (Fasting)",
+            "my fasting blood sugar level": "Glucose (Fasting)",
+            "haemoglobin": "Hemoglobin",
+            "Hb": "Hemoglobin",
+            "white blood cells": "WBC",
+            "vit d": "Vitamin D",
+            "VITAMIN D": "Vitamin D",
+            "vitamin d level": "Vitamin D",
+        }
+
+        for asked, expected in cases.items():
+            result = self.tools.get_parameter_details(asked)
+            self.assertEqual(result.get("parameter"), expected, asked)
+
+    def test_unrelated_or_too_short_names_do_not_match_by_accident(self):
+
+        for asked in ("cholesterol", "", "x", "d", "potassium level"):
+            self.assertIn("error", self.tools.get_parameter_details(asked), asked)
+
+    def test_compute_deviation_also_understands_everyday_names(self):
+
+        self.assertEqual(self.tools.compute_deviation("fasting glucose")["percent_above_maximum"], 46.5)
+
+    def test_not_found_errors_list_the_valid_names_so_the_model_can_retry(self):
+
+        for result in (self.tools.get_parameter_details("zinc"), self.tools.compute_deviation("zinc")):
+            self.assertIn("Hemoglobin", result["available_parameters"])
+
     def test_unknown_parameter_returns_an_error_with_the_valid_names(self):
         result = self.tools.get_parameter_details("Cholesterol")
         self.assertIn("not in this report", result["error"])
@@ -106,7 +142,9 @@ class AgentLoopTests(unittest.TestCase):
 
     def test_answers_directly_when_no_tool_is_needed(self):
         result = self.run_agent(fake_client(text_response("Hello")))
-        self.assertEqual(result, {"answer": "Hello", "tools_used": [], "steps": 1})
+        self.assertEqual({k: result[k] for k in ("answer", "tools_used", "steps")},
+                         {"answer": "Hello", "tools_used": [], "steps": 1})
+        self.assertTrue(result["model"])
 
     def test_calls_a_tool_then_answers_from_its_result(self):
         client = fake_client(

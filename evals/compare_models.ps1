@@ -1,6 +1,6 @@
 # Smoke-test several Gemini models against the running Docker stack.
 #
-# For each model it restarts the backend with GEMINI_MODEL=<model> and checks
+# For each model it restarts the backend with GEMINI_MODELS=<model> (a one-model list) and checks
 #   1. structured output: upload the sample report -> valid analysis JSON
 #   2. tool calling:      "How far below normal is my vitamin D, in percent?"
 #                         must call compute_deviation and answer 40
@@ -54,7 +54,7 @@ foreach ($model in $Models) {
   $row = [ordered]@{ model = $model; started = $false; structured_ok = $false; risk = ""; upload_s = $null;
                      tool_used = ""; answer_ok = $false; chat_s = $null; note = "" }
 
-  $env:GEMINI_MODEL = $model
+  $env:GEMINI_MODELS = $model
   docker compose up -d backend 2>&1 | Out-Null
 
   if (-not (Wait-Backend)) { $row.note = "backend did not start"; $results += [pscustomobject]$row; continue }
@@ -105,7 +105,7 @@ foreach ($model in $Models) {
 }
 
 # Put the stack back on the default model.
-Remove-Item Env:GEMINI_MODEL -ErrorAction SilentlyContinue
+Remove-Item Env:GEMINI_MODELS -ErrorAction SilentlyContinue
 docker compose up -d backend 2>&1 | Out-Null
 
 $results | Format-Table model, started, structured_ok, risk, upload_s, tool_used, answer_ok, chat_s, note -AutoSize -Wrap | Out-String -Width 220

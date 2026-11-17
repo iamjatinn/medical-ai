@@ -174,3 +174,75 @@ class GeminiStructuredTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ModelFallbackTests(unittest.TestCase):
+    """Overloaded / out-of-quota / retired models fall through to the next one."""
+
+    def error(self, kind, code=None):
+        from google.genai.errors import ClientError, ServerError
+
+        body = {"error": {"message": "test"}}
+        return ServerError(code or 503, body) if kind == "server" else ClientError(code, body)
+
+    def client(self, *outcomes):
+        client = mock.MagicMock()
+        client.models.generate_content.side_effect = list(outcomes)
+        return client
+
+    def run_chain(self, client):
+        return gemini_service.generate_with_fallback(
+            contents="p", client=client, models=["model-a", "model-b", "model-c"]
+        )
+
+    def models_tried(self, client):
+        return [c.kwargs["model"] for c in client.models.generate_content.call_args_list]
+
+    def test_first_model_is_used_when_it_works(self):
+        client = self.client("ok")
+        response, model = self.run_chain(client)
+        self.assertEqual((response, model), ("ok", "model-a"))
+        self.assertEqual(self.models_tried(client), ["model-a"])
+
+    def test_overload_503_quota_429_and_retired_404_fall_through(self):
+        client = self.client(
+            self.error("server", 503), self.error("client", 429), "third works"
+        )
+        response, model = self.run_chain(client)
+        self.assertEqual((response, model), ("third works", "model-c"))
+        self.assertEqual(self.models_tried(client), ["model-a", "model-b", "model-c"])
+
+        client = self.client(self.error("client", 404), "second works")
+        self.assertEqual(self.run_chain(client)[1], "model-b")
+
+    def test_a_timeout_falls_through(self):
+        class ReadTimeout(Exception):
+            pass
+
+        client = self.client(ReadTimeout("slow"), "second works")
+        self.assertEqual(self.run_chain(client)[1], "model-b")
+
+    def test_our_own_errors_are_not_retried_on_other_models(self):
+        """A 400 (bad request) or 403 (bad key) would fail on every model."""
+        for code in (400, 401, 403):
+            client = self.client(self.error("client", code))
+            with self.assertRaises(Exception):
+                self.run_chain(client)
+            self.assertEqual(self.models_tried(client), ["model-a"], code)
+
+    def test_when_every_model_fails_the_last_error_is_raised(self):
+        client = self.client(*[self.error("server", 503) for _ in range(3)])
+        with self.assertRaises(Exception) as context:
+            self.run_chain(client)
+        self.assertEqual(context.exception.code, 503)
+        self.assertEqual(len(self.models_tried(client)), 3)
+
+    def test_structured_output_uses_the_fallback_chain(self):
+        """generate_structured() must survive an overloaded first model."""
+        client = self.client(self.error("server", 503), SimpleNamespace(text=VALID_JSON))
+        with mock.patch.object(gemini_service, "_get_client", return_value=client), \
+             mock.patch.object(gemini_service, "GEMINI_MODELS", ["model-a", "model-b"]):
+            result, error = gemini_service.generate_structured("p", ReportAnalysis)
+        self.assertIsNone(error)
+        self.assertEqual(result.overall_risk, "moderate")
+        self.assertEqual(self.models_tried(client), ["model-a", "model-b"])

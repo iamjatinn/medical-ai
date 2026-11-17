@@ -102,7 +102,13 @@ backend\venv\Scripts\python evals\agent_eval.py         # needs the stack runnin
 
 Caveats: the knowledge base is six short documents and the questions are hand-written, so this is a sanity check and not a production benchmark. One question passes by a thin margin (0.453 vs 0.45).
 
-**Chat agent** (`evals/agent_eval.py`): 14 questions through the live API, scored by rules: the right tool was chosen, the answer contains the expected facts, it contains no invented number, no diagnosis or dosage, and off-topic or "ignore your instructions" requests are refused. API errors (quota, outage) are reported as `ERROR` and are never counted as failures. Results are written to `evals/results/agent.json`; no pass rate is published here until a full clean run completes.
+**Chat agent** (`evals/agent_eval.py`): 14 questions through the live API, scored by rules: the right tool was chosen, the answer contains the expected facts, it contains no invented number, no diagnosis or dosage, and off-topic or "ignore your instructions" requests are refused. API errors (quota, outage) are reported as `ERROR` and are never counted as failures. Results are written to `evals/results/agent_<label>.json`.
+
+**Latest full run** (default model chain, 14 questions, no API errors): **13 / 14 passed (93 %)**. Exact calculations 2/2, knowledge retrieval 2/2, no invented values 1/1, off-topic and prompt-injection refusals 2/2, no diagnosis / no dosage 2/2, concise summary 1/1, tool choice and grounding 3/4. The one miss was a correct answer ("145 mg/dL, which is above the reference range") that my check rejected because it expected the word "high"; the check now also accepts "above" and "elevated" (this run has not been repeated). Rule-based checks on a small set are a regression guard, not proof of clinical safety.
+
+## Gemini models and fallback
+
+`GEMINI_MODELS` is an ordered list (default `gemini-3.1-flash-lite,gemini-3.6-flash,gemini-2.5-flash`). Every Gemini call (plain, structured output, tool-using chat) tries the first model and moves to the next on `503` (overloaded), `429` (quota), `404` (model retired) or a timeout (60 s). A bad request or a bad API key is raised immediately instead of being retried. `evals/compare_models.ps1` checks each model for structured output, tool calling and latency; `evals/results/model_smoke.json` has the latest run.
 
 ## Deploy
 

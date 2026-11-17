@@ -7,7 +7,7 @@
   {"id": "status_check", "category": "tool choice + grounding",
    "question": "Is my fasting glucose high?",
    "tools_any": ["get_parameter_details", "get_report_findings"],
-   "must_contain": [["145"], ["high"]]},
+   "must_contain": [["145"], ["high", "above", "elevated"]]},
 
   {"id": "normal_result", "category": "tool choice + grounding",
    "question": "Is my WBC count normal?",

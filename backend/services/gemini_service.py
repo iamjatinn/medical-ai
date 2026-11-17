@@ -7,7 +7,7 @@ from google.genai import types
 from google.genai.errors import ClientError, ServerError
 from pydantic import ValidationError
 
-from config import BASE_DIR, GEMINI_MODEL
+from config import BASE_DIR, GEMINI_MODELS, GEMINI_TIMEOUT_SECONDS
 
 load_dotenv(BASE_DIR / ".env")
 load_dotenv()
@@ -33,10 +33,55 @@ def _get_client():
         # Structured output (JSON mode) is only available on the v1beta API.
         _client = genai.Client(
             api_key=api_key,
-            http_options=types.HttpOptions(api_version="v1beta"),
+            http_options=types.HttpOptions(
+                api_version="v1beta",
+                timeout=GEMINI_TIMEOUT_SECONDS * 1000,     # milliseconds
+            ),
         )
 
     return _client
+
+
+# ---------------- model fallback ---------------- #
+
+def _should_try_next_model(error: Exception) -> bool:
+    """Problems that another model may not have: overload, quota, a retired
+    model, a hung request. A bad request or a bad key is OUR problem, so it is
+    raised immediately instead of being retried on every model."""
+
+    if isinstance(error, ServerError):                       # 5xx, e.g. 503 high demand
+        return True
+
+    if isinstance(error, ClientError):
+        return error.code in (404, 429)                      # retired model / quota
+
+    return "timeout" in type(error).__name__.lower()
+
+
+def generate_with_fallback(*, contents, config=None, client=None, models=None):
+    """generate_content() on the first model that works.
+
+    Returns (response, model_name). If every model fails, the last error is raised.
+    """
+
+    client = client or _get_client()
+    last_error = None
+
+    for model in (models or GEMINI_MODELS):
+
+        try:
+            response = client.models.generate_content(model=model, contents=contents, config=config)
+            logger.info("Gemini model used: %s", model)
+            return response, model
+
+        except Exception as error:
+            if not _should_try_next_model(error):
+                raise
+
+            logger.warning("Model %s is unavailable (%s); trying the next one", model, type(error).__name__)
+            last_error = error
+
+    raise last_error
 
 
 def generate_response(prompt):
@@ -44,10 +89,7 @@ def generate_response(prompt):
     try:
         logger.info("Sending request to Gemini API")
 
-        response = _get_client().models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-        )
+        response, _ = generate_with_fallback(contents=prompt)
 
         logger.info("Gemini response generated successfully")
 
@@ -119,8 +161,7 @@ def generate_structured(prompt, schema):
         try:
             logger.info("Requesting structured output (attempt %d)", attempt)
 
-            response = _get_client().models.generate_content(
-                model=GEMINI_MODEL,
+            response, _ = generate_with_fallback(
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
