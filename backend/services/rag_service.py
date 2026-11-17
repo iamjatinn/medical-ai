@@ -1,99 +1,122 @@
+import json
 import logging
-import pickle
+from pathlib import Path
+
 import faiss
 import numpy as np
-from config import VECTOR_INDEX_PATH, DOCUMENT_STORE_PATH
 
-from services.embedding_service import generate_embedding
+from config import (
+    DOCUMENT_STORE_PATH,
+    MIN_SIMILARITY,
+    TOP_K,
+    VECTOR_INDEX_PATH,
+)
+from services import embedding_service
 
 logger = logging.getLogger(__name__)
 
+
 class RAGService:
+    """A small FAISS-backed semantic search over text chunks.
 
-    def __init__(self):
+    Embeddings are normalised, so an inner-product index (IndexFlatIP)
+    returns cosine similarity: higher score = more similar.
+    """
 
-        logger.info("Initializing FAISS index...")
+    def __init__(self, dimension: int | None = None):
 
-        self.dimension = 384
+        self.dimension = dimension or embedding_service.get_embedding_dimension()
 
-        self.index = faiss.IndexFlatL2(self.dimension)
+        self.index = faiss.IndexFlatIP(self.dimension)
 
-        self.documents = []
+        self.documents: list[str] = []
 
-        logger.info("FAISS index initialized.")
+    # ---------------- indexing ---------------- #
 
+    def add_documents(self, texts):
+
+        texts = [text for text in texts if text and text.strip()]
+
+        if not texts:
+            return
+
+        embeddings = embedding_service.generate_embeddings(texts)
+
+        embeddings = np.ascontiguousarray(embeddings, dtype="float32")
+
+        self.index.add(embeddings)
+
+        self.documents.extend(texts)
+
+        logger.info("Added %d chunks to the FAISS index.", len(texts))
 
     def add_document(self, text: str):
 
-        logger.info("Adding document to FAISS.")
+        self.add_documents([text])
 
-        embedding = generate_embedding(text)
+    # ---------------- search ---------------- #
 
-        embedding = np.array(
-            [embedding],
-            dtype="float32"
-        )
+    def search(self, query: str, k: int = TOP_K, min_score: float = MIN_SIMILARITY):
 
-        self.index.add(embedding)
+        if self.index.ntotal == 0:
+            return []
 
-        self.documents.append(text)
+        query_embedding = embedding_service.generate_embeddings([query])
 
-    def search(self, query: str, k=3):
-
-        logger.info(f"Searching FAISS for query: {query}")
-
-        query_embedding = generate_embedding(query)
-
-        query_embedding = np.array(
-        [query_embedding],
-        dtype="float32"
-        )
-
-        distances, indices = self.index.search(
-        query_embedding,
-        k
+        scores, indices = self.index.search(
+            np.ascontiguousarray(query_embedding, dtype="float32"),
+            min(k, self.index.ntotal),
         )
 
         results = []
 
-        for distance, idx in zip(distances[0], indices[0]):
+        for score, idx in zip(scores[0], indices[0]):
 
-            if idx != -1:
+            if idx == -1 or score < min_score:
+                continue
 
-                results.append({
+            results.append({
                 "text": self.documents[idx],
-                "score": float(distance)
+                "score": float(score),
             })
 
         return results
 
-    def save(self):
+    # ---------------- persistence ---------------- #
 
-        faiss.write_index(
-            self.index,
-            "VECTOR_INDEX_PATH"
-        )
+    def save(
+        self,
+        index_path: Path = VECTOR_INDEX_PATH,
+        document_path: Path = DOCUMENT_STORE_PATH,
+    ):
 
-        with open(
-            " DOCUMENT_STORE_PATH",
-            "wb"
-        ) as file:
+        index_path = Path(index_path)
+        document_path = Path(document_path)
 
-            pickle.dump(
-            self.documents,
-            file
-        )
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        document_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def load(self):
+        faiss.write_index(self.index, str(index_path))
 
-        self.index = faiss.read_index(
-            VECTOR_INDEX_PATH
-        )
+        with open(document_path, "w", encoding="utf-8") as file:
+            json.dump(self.documents, file, ensure_ascii=False)
 
-        with open(
-            DOCUMENT_STORE_PATH,
-            "rb"
-        ) as file:
+        logger.info("Saved FAISS index to %s", index_path)
 
-            self.documents = pickle.load(file)
+    def load(
+        self,
+        index_path: Path = VECTOR_INDEX_PATH,
+        document_path: Path = DOCUMENT_STORE_PATH,
+    ):
 
+        self.index = faiss.read_index(str(index_path))
+        self.dimension = self.index.d
+
+        with open(document_path, "r", encoding="utf-8") as file:
+            self.documents = json.load(file)
+
+        if self.index.ntotal != len(self.documents):
+            raise ValueError(
+                "Vector index and document store are out of sync "
+                f"({self.index.ntotal} vectors vs {len(self.documents)} documents)."
+            )

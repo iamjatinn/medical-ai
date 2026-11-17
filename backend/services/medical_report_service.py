@@ -1,14 +1,20 @@
-from services.pdf_service import extract_text_from_pdf
-from services.parser_service import parse_report
-from services.normalizer_service import normalize_report
-from services.rule_engine import analyze_report
-from services.ai_service import explain_report
-from services.report_storage_service import save_report
-
 import os
 
+from services.ai_service import explain_report
+from services.normalizer_service import normalize_report
+from services.parser_service import parse_report
+from services.pdf_service import extract_text_from_pdf
+from services.report_storage_service import save_report
+from services.rule_engine import analyze_report
 
-def process_medical_report(file_path):
+
+def process_medical_report(file_path, original_filename=None):
+    """Run the full pipeline: PDF -> text -> parsed rows -> normalised values
+    -> rule-based findings -> AI explanation -> saved report.
+
+    Raises ValueError for problems with the uploaded document itself
+    (unreadable PDF, scanned image, no lab results found).
+    """
 
     # Step 1 - Extract PDF text
     text = extract_text_from_pdf(file_path)
@@ -22,14 +28,20 @@ def process_medical_report(file_path):
     # Step 4 - Analyze report
     findings = analyze_report(normalized_report)
 
+    if not findings:
+        raise ValueError(
+            "Lab results were found, but none had a numeric value with a "
+            "reference range, so they could not be analysed."
+        )
+
     # Step 5 - Generate AI summary
     ai_summary = explain_report(findings)
 
     # Step 6 - Save report
     report = save_report(
-        filename=os.path.basename(file_path),
+        filename=original_filename or os.path.basename(file_path),
         findings=findings,
-        ai_summary=ai_summary
+        ai_summary=ai_summary,
     )
 
     # Step 7 - Return response
@@ -38,5 +50,5 @@ def process_medical_report(file_path):
         "filename": report["filename"],
         "created_at": report["created_at"],
         "findings": report["findings"],
-        "ai_summary": report["ai_summary"]
+        "ai_summary": report["ai_summary"],
     }

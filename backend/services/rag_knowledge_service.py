@@ -1,36 +1,71 @@
 import logging
+import threading
 
+from config import TOP_K
 from services.index_builder import build_index
 from services.query_builder import build_query
-from config import TOP_K
 
 logger = logging.getLogger(__name__)
 
-# Build/load the FAISS index once
-rag = build_index()
+_rag = None
+_lock = threading.Lock()
+
+
+def get_rag():
+    """Build / load the FAISS index once and share it across the whole app."""
+
+    global _rag
+
+    if _rag is None:
+        with _lock:
+            if _rag is None:
+                _rag = build_index()
+
+    return _rag
+
+
+def _unique(texts):
+
+    seen = set()
+    unique = []
+
+    for text in texts:
+        if text not in seen:
+            seen.add(text)
+            unique.append(text)
+
+    return unique
 
 
 def retrieve_knowledge(findings):
+    """Retrieve background knowledge for the *abnormal* findings only.
+    Normal results do not need an explanation, and searching for them just
+    pads the prompt with irrelevant text."""
 
-    logger.info("Retrieving knowledge using FAISS.")
+    rag = get_rag()
 
     knowledge = []
 
     for finding in findings:
 
+        if finding.get("calculated_status") == "Normal":
+            continue
+
         query = build_query(finding)
 
-        logger.info(f"Searching for: {query}")
+        for result in rag.search(query, k=TOP_K):
+            knowledge.append(result["text"])
 
-        results = rag.search(query, k=TOP_K)
+    knowledge = _unique(knowledge)
 
-        for result in results:
-
-            if isinstance(result, dict):
-                knowledge.append(result["text"])
-            else:
-                knowledge.append(result)
-
-    logger.info(f"Retrieved {len(knowledge)} knowledge chunks.")
+    logger.info("Retrieved %d knowledge chunks.", len(knowledge))
 
     return knowledge
+
+
+def retrieve_for_question(question: str):
+    """Retrieve knowledge relevant to a free-text chat question."""
+
+    results = get_rag().search(question, k=TOP_K)
+
+    return _unique(result["text"] for result in results)

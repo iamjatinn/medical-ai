@@ -1,10 +1,11 @@
+from typing import List, Optional
+
 from pydantic import BaseModel
-from typing import List
 
 
 class ReferenceRange(BaseModel):
-    min: float
-    max: float
+    min: Optional[float] = None
+    max: Optional[float] = None
 
 
 class Finding(BaseModel):
@@ -12,9 +13,9 @@ class Finding(BaseModel):
     value: float
     unit: str
     reference_range: ReferenceRange
-    reported_status: str
+    reported_status: Optional[str] = None
     calculated_status: str
-    status_match: bool
+    status_match: Optional[bool] = None
 
 
 class ReportResult(BaseModel):

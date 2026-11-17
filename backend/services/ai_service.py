@@ -1,36 +1,25 @@
 import json
+import logging
 
+from prompts.report_prompt import REPORT_PROMPT
 from services.gemini_service import generate_response
 from services.rag_knowledge_service import retrieve_knowledge
-from prompts.report_prompt import REPORT_PROMPT
+
+logger = logging.getLogger(__name__)
 
 
 def explain_report(findings):
 
     knowledge = retrieve_knowledge(findings)
 
-    print("\n========== RETRIEVED KNOWLEDGE ==========\n")
-
-    for i, chunk in enumerate(knowledge, start=1):
-
-        print(f"Chunk {i}:")
-
-        print(chunk)
-
-        print("-" * 60)
+    for number, chunk in enumerate(knowledge, start=1):
+        logger.debug("Retrieved knowledge chunk %d: %s", number, chunk)
 
     report_data = {
         "findings": findings,
-        "medical_knowledge": knowledge
+        "medical_knowledge": knowledge,
     }
 
-    structured_report = json.dumps(
-        report_data,
-        indent=2
-    )
-
-    prompt = REPORT_PROMPT.format(
-        report=structured_report
-    )
+    prompt = REPORT_PROMPT.format(report=json.dumps(report_data, indent=2))
 
     return generate_response(prompt)

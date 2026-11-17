@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from models.chat_models import ChatRequest, ChatResponse
 from services.chat_service import ask_question
+from services.report_storage_service import ReportNotFoundError
 
 router = APIRouter()
 
@@ -9,11 +10,10 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
 
-    answer = ask_question(
-        request.report_id,
-        request.question
-    )
+    try:
+        answer = ask_question(request.report_id, request.question.strip())
 
-    return {
-        "answer": answer
-    }
+    except ReportNotFoundError:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    return {"answer": answer}

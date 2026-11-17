@@ -5,7 +5,10 @@ from services.report_storage_service import (
     save_chat
 )
 
-from services.rag_knowledge_service import retrieve_knowledge
+from services.rag_knowledge_service import (
+    retrieve_for_question,
+    retrieve_knowledge,
+)
 from services.gemini_service import generate_response
 
 
@@ -46,7 +49,11 @@ def ask_question(report_id: str, question: str):
 
     findings = report["findings"]
 
-    knowledge = retrieve_knowledge(findings)
+    # Knowledge for the abnormal findings, plus knowledge matching the
+    # actual question (without duplicates).
+    knowledge = list(dict.fromkeys(
+        retrieve_knowledge(findings) + retrieve_for_question(question)
+    )) or ["No additional medical knowledge was retrieved."]
 
     history = report.get("chat_history", [])
 
