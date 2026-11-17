@@ -4,7 +4,7 @@ from unittest import mock
 
 import helpers  # noqa: F401
 
-from models.analysis_models import ReportAnalysis
+from models.analysis_models import ReportAnalysis, ReportAnalysisDraft
 from prompts.report_prompt import REPORT_PROMPT, STRUCTURED_REPORT_PROMPT
 from services import ai_service
 
@@ -31,7 +31,7 @@ class PromptTests(unittest.TestCase):
         findings = [{"parameter": "Hemoglobin", "calculated_status": "Low"}]
 
         with mock.patch.object(
-            ai_service, "retrieve_knowledge", return_value=["Iron helps make hemoglobin."]
+            ai_service, "retrieve_with_sources", return_value=(["Iron helps make hemoglobin."], [])
         ), mock.patch.object(
             ai_service, "generate_structured", return_value=(ANALYSIS, None)
         ) as generate:
@@ -42,7 +42,7 @@ class PromptTests(unittest.TestCase):
 
         self.assertIn(json.dumps("Hemoglobin"), prompt)
         self.assertIn("Iron helps make hemoglobin.", prompt)
-        self.assertIs(schema, ReportAnalysis)
+        self.assertIs(schema, ReportAnalysisDraft)
 
 
 if __name__ == "__main__":

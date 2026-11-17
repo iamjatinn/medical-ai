@@ -1,11 +1,11 @@
 import json
 import logging
 
-from models.analysis_models import ReportAnalysis
+from models.analysis_models import ReportAnalysis, ReportAnalysisDraft
 from prompts.report_prompt import STRUCTURED_REPORT_PROMPT
 from services.analysis_service import render_markdown, sanitize_analysis
 from services.gemini_service import generate_structured
-from services.rag_knowledge_service import retrieve_knowledge
+from services.rag_knowledge_service import retrieve_with_sources
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def explain_report(findings):
       - summary:  readable text made from it (or a friendly error message)
     """
 
-    knowledge = retrieve_knowledge(findings)
+    knowledge, sources = retrieve_with_sources(findings)
 
     for number, chunk in enumerate(knowledge, start=1):
         logger.debug("Retrieved knowledge chunk %d: %s", number, chunk)
@@ -30,11 +30,14 @@ def explain_report(findings):
         )
     )
 
-    analysis, error_message = generate_structured(prompt, ReportAnalysis)
+    draft, error_message = generate_structured(prompt, ReportAnalysisDraft)
 
-    if analysis is None:
+    if draft is None:
         return {"summary": error_message, "analysis": None}
 
+    data = draft.model_dump()
+    data["sources"] = sources            # always the real retrieved sources
+    analysis = ReportAnalysis(**data)
     analysis = sanitize_analysis(analysis, findings)
 
     return {

@@ -95,12 +95,19 @@ class ToolTests(unittest.TestCase):
 
     def test_search_knowledge_returns_passages_from_the_index(self):
         fake_rag = mock.Mock()
-        fake_rag.search.return_value = [{"text": "Iron-rich foods include spinach.", "score": 0.7}]
+        fake_rag.search.return_value = [{
+            "text": "Iron-rich foods include spinach.", "score": 0.7,
+            "source": {"title": "Iron Tests", "url": "https://medlineplus.gov/lab-tests/iron-tests/"},
+        }]
 
         with mock.patch.object(tools_service, "get_rag", return_value=fake_rag):
             result = self.tools.search_knowledge("iron foods")
 
-        self.assertEqual(result, {"passages": ["Iron-rich foods include spinach."]})
+        self.assertEqual(result, {"passages": [{
+            "text": "Iron-rich foods include spinach.",
+            "source": "Iron Tests",
+            "url": "https://medlineplus.gov/lab-tests/iron-tests/",
+        }]})
 
     def test_execute_never_raises(self):
         self.assertIn("unknown tool", self.tools.execute("delete_everything", {})["error"])

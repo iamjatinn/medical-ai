@@ -19,7 +19,9 @@ class AbnormalFindingExplanation(BaseModel):
     lifestyle_tips: List[str]
 
 
-class ReportAnalysis(BaseModel):
+class ReportAnalysisDraft(BaseModel):
+    """What Gemini is asked to produce (the schema sent to the model)."""
+
     overview: str
     overall_risk: Literal["low", "mild", "moderate", "high"]
     risk_explanation: str
@@ -30,6 +32,19 @@ class ReportAnalysis(BaseModel):
     follow_up_tests: List[str]
     questions_for_doctor: List[str]
     disclaimer: str
+
+
+class SourceRef(BaseModel):
+    title: str
+    url: str = ""
+    credit: str = ""
+
+
+class ReportAnalysis(ReportAnalysisDraft):
+    """The draft plus the sources that were really retrieved. The sources come
+    from our own search results, never from the AI, so they cannot be invented."""
+
+    sources: List[SourceRef] = []
 
 
 class AnalysisResult(BaseModel):

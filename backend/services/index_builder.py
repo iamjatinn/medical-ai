@@ -46,12 +46,25 @@ def build_index() -> RAGService:
 
     rag = RAGService()
 
-    chunks = []
+    chunks, sources = [], []
 
     for document in load_documents(KNOWLEDGE_FOLDER):
-        chunks.extend(chunk_text(document))
 
-    rag.add_documents(chunks)
+        source = {
+            "name": document.name,
+            "title": document.title,
+            "url": document.url,
+            "credit": document.source,
+        }
+
+        for chunk in chunk_text(document.text):
+            # Put the document title in front of every chunk. A chunk such as
+            # "What do the results mean?" is otherwise ambiguous: it does not
+            # say which test it is about, and the search cannot tell either.
+            chunks.append(f"{document.title}: {chunk}")
+            sources.append(source)
+
+    rag.add_documents(chunks, sources)
 
     rag.save()
 
