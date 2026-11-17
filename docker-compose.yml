@@ -1,0 +1,42 @@
+# Start everything:  docker compose up --build
+# Stop:              docker compose down        (add -v to also delete saved data)
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env              # holds GEMINI_API_KEY (never baked into the image)
+    environment:
+      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+    volumes:
+      # Named volumes keep data across restarts (a database will replace reports/ later).
+      - reports_data:/app/backend/reports
+      - vector_data:/app/backend/vector_store
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        # The URL the *browser* uses to reach the API.
+        VITE_API_URL: "http://localhost:8000"
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  reports_data:
+  vector_data:

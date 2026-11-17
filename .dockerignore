@@ -1,0 +1,24 @@
+# Never send secrets, virtualenvs, caches or local data into the build context.
+.git
+.claude
+.vscode
+
+**/.env
+**/venv
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/dist
+
+backend/reports
+backend/uploads
+backend/vector_store
+
+# The frontend has its own Dockerfile and context.
+frontend
+
+tests
+submission
+*.docx
+*.pdf
+build_resume.js
