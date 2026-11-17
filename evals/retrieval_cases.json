@@ -1,0 +1,47 @@
+{
+  "in_scope": [
+    {"query": "why is my hemoglobin low", "expected_source": "anemia"},
+    {"query": "which foods are rich in iron", "expected_source": "anemia"},
+    {"query": "tiredness weakness and dizziness symptoms", "expected_source": "anemia"},
+    {"query": "iron deficiency and hemoglobin production", "expected_source": "anemia"},
+
+    {"query": "my fasting glucose is high, what does it mean", "expected_source": "diabetes"},
+    {"query": "how can I lower my blood sugar", "expected_source": "diabetes"},
+    {"query": "signs of prediabetes", "expected_source": "diabetes"},
+    {"query": "does exercise and weight loss help control glucose", "expected_source": "diabetes"},
+
+    {"query": "what does low vitamin D do to my bones", "expected_source": "vitamin_d"},
+    {"query": "how can I improve my vitamin D level", "expected_source": "vitamin_d"},
+    {"query": "sunlight exposure and vitamin D", "expected_source": "vitamin_d"},
+    {"query": "muscle weakness and bone pain from vitamin D deficiency", "expected_source": "vitamin_d"},
+
+    {"query": "what does a high white blood cell count mean", "expected_source": "wbc"},
+    {"query": "causes of a low WBC count", "expected_source": "wbc"},
+    {"query": "white blood cells fight infection", "expected_source": "wbc"},
+    {"query": "differential count and WBC result", "expected_source": "wbc"},
+
+    {"query": "causes of a low red blood cell count", "expected_source": "rbc"},
+    {"query": "what does a high RBC count mean", "expected_source": "rbc"},
+    {"query": "RBC read together with hematocrit", "expected_source": "rbc"},
+    {"query": "red blood cells and vitamin B12 or folate deficiency", "expected_source": "rbc"},
+
+    {"query": "what do platelets do", "expected_source": "platelets"},
+    {"query": "low platelet count and easy bruising", "expected_source": "platelets"},
+    {"query": "what is thrombocytosis", "expected_source": "platelets"},
+    {"query": "high platelets with inflammation or infection", "expected_source": "platelets"}
+  ],
+  "out_of_scope": [
+    "what is the capital of France",
+    "how do I bake a chocolate cake",
+    "which programming language should I learn first",
+    "who won the cricket world cup",
+    "what is the price of the latest smartphone",
+
+    "what causes high blood pressure",
+    "symptoms of a heart attack",
+    "how is a broken arm treated",
+    "what does a high cholesterol level mean",
+    "how many hours of sleep do adults need",
+    "side effects of ibuprofen"
+  ]
+}

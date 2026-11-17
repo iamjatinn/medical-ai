@@ -1,0 +1,4 @@
+# Small-server install: embeddings through fastembed (ONNX Runtime, no PyTorch).
+# Run with EMBEDDING_BACKEND=fastembed
+-r requirements-base.txt
+fastembed>=0.4

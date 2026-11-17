@@ -1,36 +1,22 @@
-import os
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
 def load_documents(folder_path):
-
-    logger.info("Loading medical documents.")
+    """Read every .txt knowledge file in a folder (sorted, so the order is
+    deterministic)."""
 
     documents = []
 
-    for filename in os.listdir(folder_path):
+    for path in sorted(Path(folder_path).glob("*.txt")):
 
-        if filename.endswith(".txt"):
+        text = path.read_text(encoding="utf-8").strip()
 
-            file_path = os.path.join(
-                folder_path,
-                filename
-            )
+        if text:
+            documents.append(text)
 
-            with open(
-                file_path,
-                "r",
-                encoding="utf-8"
-            ) as file:
-
-                documents.append(
-                    file.read()
-                )
-
-    logger.info(
-        f"{len(documents)} documents loaded."
-    )
+    logger.info("%d knowledge documents loaded from %s.", len(documents), folder_path)
 
     return documents

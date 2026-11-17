@@ -1,0 +1,67 @@
+# Start everything:  docker compose up --build
+# Stop:              docker compose down        (add -v to also delete saved data)
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: medical
+      POSTGRES_PASSWORD: dev_password_change_me     # local development only
+      POSTGRES_DB: medical_ai
+    volumes:
+      - db_data:/var/lib/postgresql/data            # keeps the data when containers are recreated
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medical -d medical_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env              # holds GEMINI_API_KEY (never baked into the image)
+    environment:
+      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+      # Models are tried in order; an overloaded (503), out-of-quota (429) or retired (404) model is skipped.
+      GEMINI_MODELS: "${GEMINI_MODELS:-gemini-3.1-flash-lite,gemini-3.6-flash,gemini-2.5-flash}"
+      # Secret used to sign login tokens. Empty = a random one per start (fine for
+      # local use; everyone is logged out on restart). For a real deployment set a
+      # long random value, e.g.:  JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))")
+      JWT_SECRET: "${JWT_SECRET:-}"
+      APP_ENV: "${APP_ENV:-development}"              # "production" makes the app refuse a missing/weak secret
+      # "db" is the service name above: containers reach each other by service name.
+      DATABASE_URL: "postgresql+psycopg://medical:dev_password_change_me@db:5432/medical_ai"
+    depends_on:
+      db:
+        condition: service_healthy   # start the API only after Postgres accepts connections
+    volumes:
+      - vector_data:/app/backend/vector_store
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        # The URL the *browser* uses to reach the API.
+        VITE_API_URL: "http://localhost:8000"
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  vector_data:

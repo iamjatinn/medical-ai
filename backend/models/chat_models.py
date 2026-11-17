@@ -1,10 +1,13 @@
-from pydantic import BaseModel
+from typing import List
+
+from pydantic import BaseModel, Field
 
 
 class ChatRequest(BaseModel):
     report_id: str
-    question: str
+    question: str = Field(min_length=1, max_length=1000)
 
 
 class ChatResponse(BaseModel):
     answer: str
+    tools_used: List[str] = []      # which tools the assistant called, in order

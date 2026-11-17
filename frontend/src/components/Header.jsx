@@ -3,11 +3,13 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Activity, UploadCloud, FileText } from "lucide-react";
 import { useReport } from "../context/ReportContext";
+import { useAuth } from "../context/AuthContext";
 
 export const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { reportData, resetSession } = useReport();
+  const { user, logout } = useAuth();
 
   const handleNewUpload = () => {
     resetSession();
@@ -53,6 +55,23 @@ export const Header = () => {
               >
                 <UploadCloud className="w-3.5 h-3.5 text-slate-500" />
                 <span>Upload New Report</span>
+              </button>
+            </div>
+          )}
+
+          {user && (
+            <div className="flex items-center space-x-2 pl-3 border-l border-slate-200">
+              <span
+                className="hidden md:inline text-xs text-slate-600 truncate max-w-[180px]"
+                title={user.email}
+              >
+                {user.email}
+              </span>
+              <button
+                onClick={logout}
+                className="text-xs font-medium px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200"
+              >
+                Log out
               </button>
             </div>
           )}

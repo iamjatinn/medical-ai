@@ -1,15 +1,22 @@
 import logging
 
-from config import CHUNK_SIZE
+from config import CHUNK_OVERLAP, CHUNK_SIZE
 
 logger = logging.getLogger(__name__)
 
-CHUNK_OVERLAP = 50
 
+def chunk_text(
+    text: str,
+    chunk_size: int = CHUNK_SIZE,
+    overlap: int = CHUNK_OVERLAP,
+):
+    """Split text into overlapping chunks, preferring to cut at whitespace
+    so words are not sliced in half."""
 
-def chunk_text(text: str, chunk_size=CHUNK_SIZE):
+    if overlap >= chunk_size:
+        raise ValueError("overlap must be smaller than chunk_size")
 
-    logger.info("Splitting document into chunks.")
+    text = text.strip()
 
     chunks = []
 
@@ -17,14 +24,32 @@ def chunk_text(text: str, chunk_size=CHUNK_SIZE):
 
     while start < len(text):
 
-        end = start + chunk_size
+        end = min(start + chunk_size, len(text))
 
-        chunk = text[start:end]
+        if end < len(text):
 
-        chunks.append(chunk)
+            cut = max(
+                text.rfind(" ", start + overlap + 1, end),
+                text.rfind("\n", start + overlap + 1, end),
+            )
 
-        start += (chunk_size - CHUNK_OVERLAP)
+            if cut != -1:
+                end = cut
 
-    logger.info(f"{len(chunks)} chunks created.")
+        chunk = text[start:end].strip()
+
+        if chunk:
+            chunks.append(chunk)
+
+        if end >= len(text):
+            break
+
+        start = max(end - overlap, start + 1)
+
+        # Begin the next chunk at the start of a word, not in the middle of one.
+        while start < end and not text[start - 1].isspace():
+            start += 1
+
+    logger.debug("%d chunks created.", len(chunks))
 
     return chunks

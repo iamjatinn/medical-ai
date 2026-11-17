@@ -1,0 +1,115 @@
+﻿{
+    "results":  [
+                    {
+                        "model":  "gemini-2.5-flash",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  0.5,
+                        "tool_used":  "",
+                        "answer_ok":  false,
+                        "chat_s":  0.7,
+                        "note":  "AI analysis could not be generated due to an API request error."
+                    },
+                    {
+                        "model":  "gemini-2.5-flash-lite",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  0.6,
+                        "tool_used":  "",
+                        "answer_ok":  false,
+                        "chat_s":  0.7,
+                        "note":  "AI analysis could not be generated due to an API request error."
+                    },
+                    {
+                        "model":  "gemini-3.1-flash-lite",
+                        "started":  true,
+                        "structured_ok":  true,
+                        "risk":  "moderate",
+                        "upload_s":  4.6,
+                        "tool_used":  "compute_deviation",
+                        "answer_ok":  true,
+                        "chat_s":  4.8,
+                        "note":  ""
+                    },
+                    {
+                        "model":  "gemini-3.5-flash-lite",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  3.8,
+                        "tool_used":  "compute_deviation",
+                        "answer_ok":  true,
+                        "chat_s":  2.5,
+                        "note":  "AI analysis is temporarily unavailable due to high demand. Please try again later."
+                    },
+                    {
+                        "model":  "gemini-3.5-flash",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  170,
+                        "tool_used":  "",
+                        "answer_ok":  false,
+                        "chat_s":  null,
+                        "note":  "upload failed"
+                    },
+                    {
+                        "model":  "gemini-3.6-flash",
+                        "started":  true,
+                        "structured_ok":  true,
+                        "risk":  "moderate",
+                        "upload_s":  8.1,
+                        "tool_used":  "compute_deviation",
+                        "answer_ok":  true,
+                        "chat_s":  4.3,
+                        "note":  ""
+                    },
+                    {
+                        "model":  "gemini-3.7-flash",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  116.8,
+                        "tool_used":  "",
+                        "answer_ok":  false,
+                        "chat_s":  6.5,
+                        "note":  "AI analysis is temporarily unavailable due to high demand. Please try again later."
+                    },
+                    {
+                        "model":  "gemini-3.8-flash",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  2.3,
+                        "tool_used":  "",
+                        "answer_ok":  false,
+                        "chat_s":  7.6,
+                        "note":  "AI analysis is temporarily unavailable due to high demand. Please try again later."
+                    },
+                    {
+                        "model":  "gemini-3-flash-preview",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  1.8,
+                        "tool_used":  "",
+                        "answer_ok":  false,
+                        "chat_s":  8.5,
+                        "note":  "AI analysis is temporarily unavailable due to high demand. Please try again later."
+                    },
+                    {
+                        "model":  "gemini-flash-latest",
+                        "started":  true,
+                        "structured_ok":  false,
+                        "risk":  "",
+                        "upload_s":  3.5,
+                        "tool_used":  "",
+                        "answer_ok":  false,
+                        "chat_s":  44.4,
+                        "note":  "AI analysis is temporarily unavailable due to high demand. Please try again later."
+                    }
+                ],
+    "date":  "2026-11-18T00:24:25"
+}

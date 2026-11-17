@@ -1,10 +1,13 @@
+from typing import List, Optional
+
 from pydantic import BaseModel
-from typing import List
+
+from models.analysis_models import ReportAnalysis
 
 
 class ReferenceRange(BaseModel):
-    min: float
-    max: float
+    min: Optional[float] = None
+    max: Optional[float] = None
 
 
 class Finding(BaseModel):
@@ -12,9 +15,9 @@ class Finding(BaseModel):
     value: float
     unit: str
     reference_range: ReferenceRange
-    reported_status: str
+    reported_status: Optional[str] = None
     calculated_status: str
-    status_match: bool
+    status_match: Optional[bool] = None
 
 
 class ReportResult(BaseModel):
@@ -22,7 +25,8 @@ class ReportResult(BaseModel):
     filename: str
     created_at: str
     findings: List[Finding]
-    ai_summary: str
+    ai_summary: str                              # readable text version
+    analysis: Optional[ReportAnalysis] = None    # validated structured version
 
 
 class ReportResponse(BaseModel):

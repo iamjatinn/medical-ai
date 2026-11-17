@@ -1,36 +1,43 @@
 import json
+import logging
 
-from services.gemini_service import generate_response
+from models.analysis_models import ReportAnalysis
+from prompts.report_prompt import STRUCTURED_REPORT_PROMPT
+from services.analysis_service import render_markdown, sanitize_analysis
+from services.gemini_service import generate_structured
 from services.rag_knowledge_service import retrieve_knowledge
-from prompts.report_prompt import REPORT_PROMPT
+
+logger = logging.getLogger(__name__)
 
 
 def explain_report(findings):
+    """Explain the findings with an LLM, using retrieved medical knowledge.
+
+    Returns {"summary": <text>, "analysis": <dict or None>}:
+      - analysis: the validated structured answer (None if the AI failed)
+      - summary:  readable text made from it (or a friendly error message)
+    """
 
     knowledge = retrieve_knowledge(findings)
 
-    print("\n========== RETRIEVED KNOWLEDGE ==========\n")
+    for number, chunk in enumerate(knowledge, start=1):
+        logger.debug("Retrieved knowledge chunk %d: %s", number, chunk)
 
-    for i, chunk in enumerate(knowledge, start=1):
+    prompt = STRUCTURED_REPORT_PROMPT.format(
+        report=json.dumps(
+            {"findings": findings, "medical_knowledge": knowledge},
+            indent=2,
+        )
+    )
 
-        print(f"Chunk {i}:")
+    analysis, error_message = generate_structured(prompt, ReportAnalysis)
 
-        print(chunk)
+    if analysis is None:
+        return {"summary": error_message, "analysis": None}
 
-        print("-" * 60)
+    analysis = sanitize_analysis(analysis, findings)
 
-    report_data = {
-        "findings": findings,
-        "medical_knowledge": knowledge
+    return {
+        "summary": render_markdown(analysis),
+        "analysis": analysis.model_dump(),
     }
-
-    structured_report = json.dumps(
-        report_data,
-        indent=2
-    )
-
-    prompt = REPORT_PROMPT.format(
-        report=structured_report
-    )
-
-    return generate_response(prompt)

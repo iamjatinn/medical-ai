@@ -1,0 +1,43 @@
+# Production image: small and secure.
+#   docker build -f backend/Dockerfile.prod -t medical-ai-api .
+#
+# Differences from backend/Dockerfile (the development image):
+#   - embeddings through fastembed (ONNX Runtime): no PyTorch, far less memory and disk
+#   - runs as a non-root user
+#   - APP_ENV=production: the server refuses to start without a strong JWT_SECRET
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    APP_ENV=production \
+    EMBEDDING_BACKEND=fastembed \
+    FASTEMBED_CACHE_PATH=/app/models
+
+WORKDIR /app
+
+# 1) Dependencies first (cached until the requirements change).
+COPY backend/requirements-base.txt backend/requirements-prod.txt backend/
+RUN pip install -r backend/requirements-prod.txt
+
+# 2) Download the embedding model at build time: fast, offline-safe starts.
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding('sentence-transformers/all-MiniLM-L6-v2', cache_dir='/app/models')"
+
+# 3) Code and knowledge files.
+COPY backend/ backend/
+COPY data/ data/
+
+# 4) Do not run as root. The app writes only to uploads/ and vector_store/.
+RUN useradd --create-home --uid 10001 app \
+ && mkdir -p backend/uploads backend/vector_store \
+ && chown -R app:app /app
+USER app
+
+WORKDIR /app/backend
+
+EXPOSE 8000
+
+# $PORT is set by most hosts (Render, Railway, Fly); 8000 otherwise.
+# --proxy-headers makes the real client address visible behind the host's proxy,
+# which the login and upload rate limits rely on.
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

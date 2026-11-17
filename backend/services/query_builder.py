@@ -11,6 +11,6 @@ def build_query(finding):
         f"meaning causes symptoms treatment diet"
     )
 
-    logger.info(f"Generated query: {query}")
+    logger.debug("Generated query: %s", query)
 
     return query
