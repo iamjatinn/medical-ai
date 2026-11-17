@@ -54,3 +54,64 @@ def patch_embeddings(test_case):
         ) = originals
 
     test_case.addCleanup(restore)
+
+
+# ---------------- shared database / auth helpers ---------------- #
+
+def patch_database(test_case):
+    """Point the app at a throw-away SQLite database for one test."""
+
+    import tempfile
+    from pathlib import Path
+    from unittest import mock
+
+    from sqlalchemy.orm import sessionmaker
+
+    import database
+    from models import db_models  # noqa: F401  (registers the tables)
+
+    folder = tempfile.TemporaryDirectory()
+    test_case.addCleanup(folder.cleanup)
+
+    engine = database.make_engine(f"sqlite:///{Path(folder.name, 'test.db').as_posix()}")
+    database.Base.metadata.create_all(engine)
+    test_case.addCleanup(engine.dispose)       # runs before folder.cleanup (LIFO)
+
+    patcher = mock.patch.object(
+        database, "SessionLocal", sessionmaker(bind=engine, expire_on_commit=False)
+    )
+    patcher.start()
+    test_case.addCleanup(patcher.stop)
+
+    return engine
+
+
+def fresh_limiters(test_case):
+    """Give every test empty rate limiters (they are module-level state)."""
+
+    from unittest import mock
+
+    from routers import auth as auth_router
+    from routers import chat as chat_router
+    from routers import upload as upload_router
+    from services.rate_limit import RateLimiter
+
+    for module, name, calls, window in (
+        (auth_router, "login_failures", 10, 900),
+        (auth_router, "registrations", 100, 3600),
+        (upload_router, "upload_limiter", 100, 3600),
+        (chat_router, "chat_limiter", 100, 3600),
+    ):
+        patcher = mock.patch.object(module, name, RateLimiter(calls, window))
+        patcher.start()
+        test_case.addCleanup(patcher.stop)
+
+
+def register(client, email="alice@example.com", password="correct-horse-1"):
+    """Create an account through the API; returns (headers, user_id)."""
+
+    response = client.post("/auth/register", json={"email": email, "password": password})
+    assert response.status_code == 201, response.text
+    body = response.json()
+
+    return {"Authorization": f"Bearer {body['access_token']}"}, body["user"]["id"]

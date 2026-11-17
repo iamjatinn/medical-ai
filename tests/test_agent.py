@@ -1,17 +1,11 @@
-import tempfile
 import unittest
-from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
 import helpers  # noqa: F401
 
 from google.genai import types
-from sqlalchemy.orm import sessionmaker
-
-import database
-from models import db_models  # noqa: F401
-from services import agent_service, chat_service
+from services import agent_service, auth_service, chat_service
 from services import report_storage_service as storage
 from services import tools_service
 from services.tools_service import ReportTools
@@ -184,18 +178,12 @@ class AgentLoopTests(unittest.TestCase):
 class ChatServiceTests(unittest.TestCase):
 
     def setUp(self):
-        folder = tempfile.TemporaryDirectory()
-        self.addCleanup(folder.cleanup)
+        helpers.patch_database(self)
+        self.user_id = auth_service.create_user("chat@example.com", "password-one").id
+        self.report = storage.save_report("lab.pdf", FINDINGS, "summary", user_id=self.user_id)
 
-        engine = database.make_engine(f"sqlite:///{Path(folder.name, 't.db').as_posix()}")
-        database.Base.metadata.create_all(engine)
-        self.addCleanup(engine.dispose)
-
-        patcher = mock.patch.object(database, "SessionLocal", sessionmaker(bind=engine, expire_on_commit=False))
-        patcher.start()
-        self.addCleanup(patcher.stop)
-
-        self.report = storage.save_report("lab.pdf", FINDINGS, "summary")
+    def ask(self, question):
+        return chat_service.ask_question(self.report["report_id"], question, user_id=self.user_id)
 
     def test_agent_answer_and_tools_are_returned_and_saved(self):
 
@@ -203,21 +191,18 @@ class ChatServiceTests(unittest.TestCase):
             agent_service, "run_agent",
             return_value={"answer": "agent answer", "tools_used": ["compute_deviation"], "steps": 2},
         ):
-            result = chat_service.ask_question(self.report["report_id"], "How low is my vitamin D?")
+            result = self.ask("How low is my vitamin D?")
 
         self.assertEqual(result, {"answer": "agent answer", "tools_used": ["compute_deviation"]})
 
-        history = storage.load_report(self.report["report_id"])["chat_history"]
+        history = storage.load_report(self.report["report_id"], user_id=self.user_id)["chat_history"]
         self.assertEqual([m["content"] for m in history], ["How low is my vitamin D?", "agent answer"])
 
     def test_if_the_agent_fails_the_plain_rag_prompt_is_used(self):
 
-        with mock.patch.object(agent_service, "run_agent", side_effect=RuntimeError("api down")), \
-             mock.patch.object(chat_service, "retrieve_knowledge", return_value=[]), \
-             mock.patch.object(chat_service, "retrieve_for_question", return_value=[]), \
-             mock.patch.object(chat_service, "generate_response", return_value="fallback answer"):
+        with mock.patch.object(agent_service, "run_agent", side_effect=RuntimeError("api down")),              mock.patch.object(chat_service, "retrieve_knowledge", return_value=[]),              mock.patch.object(chat_service, "retrieve_for_question", return_value=[]),              mock.patch.object(chat_service, "generate_response", return_value="fallback answer"):
 
-            result = chat_service.ask_question(self.report["report_id"], "hi")
+            result = self.ask("hi")
 
         self.assertEqual(result, {"answer": "fallback answer", "tools_used": []})
 
@@ -225,13 +210,18 @@ class ChatServiceTests(unittest.TestCase):
 
         with mock.patch.object(
             agent_service, "run_agent", return_value={"answer": "", "tools_used": [], "steps": 1}
-        ), mock.patch.object(chat_service, "retrieve_knowledge", return_value=[]), \
-             mock.patch.object(chat_service, "retrieve_for_question", return_value=[]), \
-             mock.patch.object(chat_service, "generate_response", return_value="fallback"):
+        ), mock.patch.object(chat_service, "retrieve_knowledge", return_value=[]),              mock.patch.object(chat_service, "retrieve_for_question", return_value=[]),              mock.patch.object(chat_service, "generate_response", return_value="fallback"):
 
-            result = chat_service.ask_question(self.report["report_id"], "hi")
+            result = self.ask("hi")
 
         self.assertEqual(result["answer"], "fallback")
+
+    def test_someone_elses_report_cannot_be_asked_about(self):
+
+        other = auth_service.create_user("other@example.com", "password-two").id
+
+        with self.assertRaises(storage.ReportNotFoundError):
+            chat_service.ask_question(self.report["report_id"], "hi", user_id=other)
 
 
 if __name__ == "__main__":

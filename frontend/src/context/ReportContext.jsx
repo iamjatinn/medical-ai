@@ -181,6 +181,33 @@ export const ReportProvider = ({ children }) => {
     }
   };
 
+  // Open a report that was saved earlier (with its stored chat history).
+  const loadSavedReport = (saved) => {
+    setError(null);
+    setReportData(saved);
+
+    const stamp = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const greeting = {
+      id: "greeting",
+      sender: "assistant",
+      text: `Welcome back! Here is your saved analysis of **${saved.filename}**. Ask me anything about it.`,
+      timestamp: stamp,
+    };
+
+    const previous = (saved.chat_history || []).map((message, index) => ({
+      id: `saved-${index}`,
+      sender: message.role === "user" ? "user" : "assistant",
+      text: message.content,
+      timestamp: "",
+    }));
+
+    setChatHistory([greeting, ...previous]);
+  };
+
   const resetSession = () => {
     setReportData(null);
     setChatHistory([]);
@@ -200,6 +227,7 @@ export const ReportProvider = ({ children }) => {
         uploadReport,
         sendChatMessage,
         resetSession,
+        loadSavedReport,
         verifyBackendStatus,
         setError,
       }}

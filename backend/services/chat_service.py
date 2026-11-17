@@ -105,13 +105,14 @@ Answer naturally.
     return generate_response(prompt)
 
 
-def ask_question(report_id: str, question: str):
-    """Answer a question about a report.
+def ask_question(report_id: str, question: str, *, user_id: int):
+    """Answer a question about one of the user's own reports.
 
     Returns {"answer": str, "tools_used": [names]}.
+    Raises ReportNotFoundError if the report is not found or not owned by user_id.
     """
 
-    report = load_report(report_id)
+    report = load_report(report_id, user_id=user_id)
 
     history = report.get("chat_history", [])[-HISTORY_MESSAGES:]
 
@@ -133,6 +134,6 @@ def ask_question(report_id: str, question: str):
 
         answer, tools_used = _fallback_answer(report, question, history), []
 
-    save_chat(report_id, question, answer)
+    save_chat(report_id, question, answer, user_id=user_id)
 
     return {"answer": answer, "tools_used": tools_used}

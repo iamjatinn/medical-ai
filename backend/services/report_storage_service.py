@@ -1,17 +1,22 @@
 """Save and load reports and chat history in the database.
 
-Same functions and return shapes as the old JSON-file version, so the rest
-of the app did not have to change.
+Every function takes the OWNER's user_id and puts it into the database query
+itself ("WHERE id = ... AND user_id = ..."). A report that belongs to someone
+else is therefore indistinguishable from one that does not exist, so a user can
+neither read nor probe other people's reports.
 """
 
 import uuid
+
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 import database
 from models.db_models import ChatMessage, Finding, Report
 
 
 class ReportNotFoundError(Exception):
-    """Raised when a report id is malformed or no such report exists."""
+    """Raised when a report id is malformed, does not exist, or is not yours."""
 
 
 def _clean_id(report_id) -> str:
@@ -21,6 +26,14 @@ def _clean_id(report_id) -> str:
         return str(uuid.UUID(str(report_id)))
     except ValueError as error:
         raise ReportNotFoundError(report_id) from error
+
+
+def _owned_report(session, report_id: str, user_id: int):
+    """The report with this id AND this owner, or None."""
+
+    return session.scalar(
+        select(Report).where(Report.id == _clean_id(report_id), Report.user_id == user_id)
+    )
 
 
 def _to_dict(report: Report) -> dict:
@@ -49,10 +62,11 @@ def _to_dict(report: Report) -> dict:
     }
 
 
-def save_report(filename, findings, ai_summary, analysis=None):
+def save_report(filename, findings, ai_summary, analysis=None, *, user_id):
 
     report = Report(
         id=str(uuid.uuid4()),
+        user_id=user_id,
         filename=filename[:255],
         ai_summary=ai_summary,
         analysis=analysis,
@@ -79,11 +93,11 @@ def save_report(filename, findings, ai_summary, analysis=None):
         return _to_dict(report)
 
 
-def load_report(report_id):
+def load_report(report_id, *, user_id):
 
     with database.SessionLocal() as session:
 
-        report = session.get(Report, _clean_id(report_id))
+        report = _owned_report(session, report_id, user_id)
 
         if report is None:
             raise ReportNotFoundError(report_id)
@@ -91,18 +105,56 @@ def load_report(report_id):
         return _to_dict(report)
 
 
-def save_chat(report_id, user_message, assistant_message):
-
-    report_id = _clean_id(report_id)
+def save_chat(report_id, user_message, assistant_message, *, user_id):
 
     with database.SessionLocal() as session:
 
-        if session.get(Report, report_id) is None:
+        report = _owned_report(session, report_id, user_id)
+
+        if report is None:
             raise ReportNotFoundError(report_id)
 
         session.add_all([
-            ChatMessage(report_id=report_id, role="user", content=user_message),
-            ChatMessage(report_id=report_id, role="assistant", content=assistant_message),
+            ChatMessage(report_id=report.id, role="user", content=user_message),
+            ChatMessage(report_id=report.id, role="assistant", content=assistant_message),
         ])
 
+        session.commit()
+
+
+def list_reports(*, user_id, limit: int = 50):
+    """The user's reports, newest first (without the long texts)."""
+
+    with database.SessionLocal() as session:
+
+        reports = session.scalars(
+            select(Report)
+            .where(Report.user_id == user_id)
+            .options(selectinload(Report.findings))
+            .order_by(Report.created_at.desc())
+            .limit(limit)
+        ).all()
+
+        return [
+            {
+                "report_id": r.id,
+                "filename": r.filename,
+                "created_at": r.created_at.isoformat(),
+                "overall_risk": (r.analysis or {}).get("overall_risk"),
+                "abnormal_count": sum(1 for f in r.findings if f.calculated_status != "Normal"),
+            }
+            for r in reports
+        ]
+
+
+def delete_report(report_id, *, user_id):
+
+    with database.SessionLocal() as session:
+
+        report = _owned_report(session, report_id, user_id)
+
+        if report is None:
+            raise ReportNotFoundError(report_id)
+
+        session.delete(report)        # findings and chat messages are deleted with it
         session.commit()

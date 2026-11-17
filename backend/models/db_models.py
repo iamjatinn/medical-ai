@@ -17,14 +17,35 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(100))        # bcrypt hash, never the password
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    reports: Mapped[list["Report"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
 class Report(Base):
     __tablename__ = "reports"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)        # UUID
+    # Owner. NULL only for reports created before accounts existed; those are
+    # visible to nobody.
+    user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     filename: Mapped[str] = mapped_column(String(255))
     ai_summary: Mapped[str] = mapped_column(Text)                         # readable text version
     analysis: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # validated structured version
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped[Optional["User"]] = relationship(back_populates="reports")
 
     findings: Mapped[list["Finding"]] = relationship(
         back_populates="report",

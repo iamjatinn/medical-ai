@@ -104,20 +104,40 @@ Caveats: the knowledge base is six short documents and the questions are hand-wr
 
 **Chat agent** (`evals/agent_eval.py`): 14 questions through the live API, scored by rules: the right tool was chosen, the answer contains the expected facts, it contains no invented number, no diagnosis or dosage, and off-topic or "ignore your instructions" requests are refused. API errors (quota, outage) are reported as `ERROR` and are never counted as failures. Results are written to `evals/results/agent.json`; no pass rate is published here until a full clean run completes.
 
+## Accounts and privacy
+
+Every report belongs to a user. Nothing is visible without logging in.
+
+- **Passwords:** hashed with bcrypt (salted, slow on purpose). A wrong email and a wrong password return the same message, so accounts cannot be enumerated.
+- **Login:** returns a signed JWT (12 h). Expired, tampered, foreign-signed and `alg: none` tokens are rejected.
+- **Access control in the query:** every read, chat, list and delete runs `WHERE id = ... AND user_id = ...`. Someone else's report is indistinguishable from a missing one (`404`), so ids cannot be probed. Tests cover a second user trying to read, chat with, list and delete another user's report.
+- **Rate limits:** failed logins, sign-ups per address, and uploads/messages per user (protects passwords and the AI quota). In-memory, per server process.
+- **Delete your data:** `DELETE /reports/{id}` removes a report with its findings and chat.
+- **Logout** removes the token and any report kept in the browser.
+- **Production:** with `APP_ENV=production` the server refuses to start unless `JWT_SECRET` is set (32+ characters).
+
 ## API
 
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/upload-report` | multipart PDF → findings + AI summary + `report_id` |
-| `POST` | `/chat` | `{report_id, question}` → answer (uses the report, chat history and RAG) |
-| `GET`  | `/` | health check |
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| `POST` | `/auth/register` | no | create an account, returns a token |
+| `POST` | `/auth/login` | no | form login (`username` = email), returns a token |
+| `GET`  | `/auth/me` | yes | the current user |
+| `POST` | `/upload-report` | yes | multipart PDF → findings + structured analysis + `report_id` |
+| `GET`  | `/reports` | yes | your reports, newest first |
+| `GET`  | `/reports/{id}` | yes | one report with its chat history |
+| `DELETE` | `/reports/{id}` | yes | delete a report and its chat |
+| `POST` | `/chat` | yes | `{report_id, question}` → answer, `tools_used` |
+| `GET`  | `/` | no | health check |
 
-Errors are explicit: `400` not a PDF, `413` too large (limit 10 MB), `422` no lab results found / scanned PDF, `404` unknown report.
+Send the token as `Authorization: Bearer <token>`. In the interactive docs (`/docs`) use the **Authorize** button.
+
+Errors are explicit: `400` not a PDF, `401` not logged in, `404` unknown or not your report, `409` email already registered, `413` too large (limit 10 MB), `422` invalid input / no lab results / scanned PDF, `429` rate limit.
 
 ## Safety and robustness
 
 - Uploads are saved under a random name, size-limited, checked for the `%PDF-` header, and **deleted after processing**.
-- `report_id` must be a UUID, which blocks path-traversal ids; report JSON is written atomically.
+- `report_id` must be a UUID, which blocks path-traversal ids.
 - The Gemini client is created lazily; failures return a friendly message instead of a stack trace.
 - Chat prompt refuses off-topic questions and never diagnoses or prescribes.
 

@@ -2,11 +2,13 @@ import logging
 import re
 import uuid
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from config import MAX_UPLOAD_MB, UPLOAD_DIR
+from config import MAX_UPLOAD_MB, UPLOAD_DIR, UPLOADS_PER_HOUR_PER_USER
 from models.response_models import ReportResponse
+from services.auth_service import CurrentUser, get_current_user
 from services.medical_report_service import process_medical_report
+from services.rate_limit import RateLimiter
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +29,15 @@ def _display_name(filename: str | None) -> str:
     return name or "report.pdf"
 
 
+upload_limiter = RateLimiter(UPLOADS_PER_HOUR_PER_USER, window_seconds=60 * 60)
+
+
 @router.post("/upload-report", response_model=ReportResponse)
-def upload_report(file: UploadFile = File(...)):
+def upload_report(file: UploadFile = File(...), user: CurrentUser = Depends(get_current_user)):
+
+    # Each upload costs AI quota, so limit how many one user can send.
+    if not upload_limiter.try_acquire(user.id):
+        raise HTTPException(status_code=429, detail="Upload limit reached. Please try again later.")
 
     display_name = _display_name(file.filename)
 
@@ -68,7 +77,7 @@ def upload_report(file: UploadFile = File(...)):
         if size == 0:
             raise HTTPException(status_code=400, detail="The uploaded file is empty.")
 
-        result = process_medical_report(saved_path, original_filename=display_name)
+        result = process_medical_report(saved_path, original_filename=display_name, user_id=user.id)
 
         return {"message": "Report uploaded successfully", "result": result}
 

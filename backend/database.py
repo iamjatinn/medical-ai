@@ -39,6 +39,12 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 # table, so these are added by hand when missing: (table, column, SQL type).
 ADDED_COLUMNS = [
     ("reports", "analysis", "JSON"),
+    ("reports", "user_id", "INTEGER REFERENCES users(id) ON DELETE CASCADE"),
+]
+
+# Indexes for those columns (new databases get them from the model).
+ADDED_INDEXES = [
+    ("ix_reports_user_id", "reports", "user_id"),
 ]
 
 
@@ -57,6 +63,10 @@ def _add_missing_columns(target_engine):
 
             if column not in existing:
                 connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}"))
+
+        for index_name, table, column in ADDED_INDEXES:
+            if inspector.has_table(table):
+                connection.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({column})"))
 
 
 def init_db(target_engine=None):

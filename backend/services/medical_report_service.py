@@ -8,7 +8,7 @@ from services.report_storage_service import save_report
 from services.rule_engine import analyze_report
 
 
-def process_medical_report(file_path, original_filename=None):
+def process_medical_report(file_path, original_filename=None, *, user_id):
     """Run the full pipeline: PDF -> text -> parsed rows -> normalised values
     -> rule-based findings -> AI explanation -> saved report.
 
@@ -43,6 +43,7 @@ def process_medical_report(file_path, original_filename=None):
         findings=findings,
         ai_summary=explanation["summary"],
         analysis=explanation["analysis"],
+        user_id=user_id,
     )
 
     # Step 7 - Return response

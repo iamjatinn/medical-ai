@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useReport } from "../context/ReportContext";
 import { LoadingOverlay } from "../components/LoadingOverlay";
+import { SavedReports } from "../components/SavedReports";
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -236,6 +237,8 @@ export const Home = () => {
             </div>
           </div>
         </div>
+
+        <SavedReports />
       </div>
     </div>
   );
