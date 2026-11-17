@@ -104,6 +104,22 @@ Caveats: the knowledge base is six short documents and the questions are hand-wr
 
 **Chat agent** (`evals/agent_eval.py`): 14 questions through the live API, scored by rules: the right tool was chosen, the answer contains the expected facts, it contains no invented number, no diagnosis or dosage, and off-topic or "ignore your instructions" requests are refused. API errors (quota, outage) are reported as `ERROR` and are never counted as failures. Results are written to `evals/results/agent.json`; no pass rate is published here until a full clean run completes.
 
+## Deploy
+
+Frontend on Vercel, API in Docker on Render, PostgreSQL on Neon: step-by-step in [DEPLOY.md](DEPLOY.md) (`render.yaml` and `frontend/vercel.json` are included).
+
+Two Docker images:
+
+| | `backend/Dockerfile` (development) | `backend/Dockerfile.prod` |
+|---|---|---|
+| Embeddings | sentence-transformers (PyTorch) | **fastembed (ONNX), same model** |
+| Image size | 2.76 GB | 1.3 GB |
+| Memory while running | about 440 MB idle, over 1 GB under load | **about 290 MB** |
+| User | root | non-root |
+| `APP_ENV` | development | production (refuses to start without a strong `JWT_SECRET`) |
+
+The two embedding backends return identical retrieval scores on the evaluation set (see `evals/results/retrieval.json` and `retrieval_fastembed.json`), so the lightweight one costs nothing in quality. Choose with `EMBEDDING_BACKEND=fastembed`.
+
 ## Accounts and privacy
 
 Every report belongs to a user. Nothing is visible without logging in.

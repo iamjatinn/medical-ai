@@ -1,0 +1,658 @@
+{
+  "embedding_backend": "fastembed",
+  "date": "2026-11-18T00:16:44",
+  "top_k": 3,
+  "threshold": 0.45,
+  "questions": 35,
+  "chosen_threshold_metrics": {
+    "hit@1": 1.0,
+    "hit@3": 1.0,
+    "mrr": 1.0,
+    "abstain_rate": 1.0
+  },
+  "sweep": {
+    "0.0": {
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "mrr": 1.0,
+      "abstain_rate": 0.0
+    },
+    "0.25": {
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "mrr": 1.0,
+      "abstain_rate": 0.8181818181818182
+    },
+    "0.35": {
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "mrr": 1.0,
+      "abstain_rate": 0.9090909090909091
+    },
+    "0.45": {
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "mrr": 1.0,
+      "abstain_rate": 1.0
+    },
+    "0.55": {
+      "hit@1": 0.7083333333333334,
+      "hit@3": 0.7083333333333334,
+      "mrr": 0.7083333333333334,
+      "abstain_rate": 1.0
+    },
+    "0.65": {
+      "hit@1": 0.4583333333333333,
+      "hit@3": 0.4583333333333333,
+      "mrr": 0.4583333333333333,
+      "abstain_rate": 1.0
+    }
+  },
+  "in_scope": [
+    {
+      "query": "why is my hemoglobin low",
+      "expected_source": "anemia",
+      "retrieved": [
+        [
+          "anemia",
+          0.694
+        ],
+        [
+          "rbc",
+          0.688
+        ],
+        [
+          "wbc",
+          0.451
+        ]
+      ]
+    },
+    {
+      "query": "which foods are rich in iron",
+      "expected_source": "anemia",
+      "retrieved": [
+        [
+          "anemia",
+          0.543
+        ],
+        [
+          "vitamin_d",
+          0.269
+        ],
+        [
+          "rbc",
+          0.209
+        ]
+      ]
+    },
+    {
+      "query": "tiredness weakness and dizziness symptoms",
+      "expected_source": "anemia",
+      "retrieved": [
+        [
+          "anemia",
+          0.453
+        ],
+        [
+          "vitamin_d",
+          0.257
+        ],
+        [
+          "platelets",
+          0.203
+        ]
+      ]
+    },
+    {
+      "query": "iron deficiency and hemoglobin production",
+      "expected_source": "anemia",
+      "retrieved": [
+        [
+          "anemia",
+          0.759
+        ],
+        [
+          "rbc",
+          0.517
+        ],
+        [
+          "platelets",
+          0.282
+        ]
+      ]
+    },
+    {
+      "query": "my fasting glucose is high, what does it mean",
+      "expected_source": "diabetes",
+      "retrieved": [
+        [
+          "diabetes",
+          0.794
+        ],
+        [
+          "rbc",
+          0.309
+        ],
+        [
+          "anemia",
+          0.288
+        ]
+      ]
+    },
+    {
+      "query": "how can I lower my blood sugar",
+      "expected_source": "diabetes",
+      "retrieved": [
+        [
+          "diabetes",
+          0.508
+        ],
+        [
+          "rbc",
+          0.337
+        ],
+        [
+          "anemia",
+          0.274
+        ]
+      ]
+    },
+    {
+      "query": "signs of prediabetes",
+      "expected_source": "diabetes",
+      "retrieved": [
+        [
+          "diabetes",
+          0.543
+        ],
+        [
+          "anemia",
+          0.307
+        ],
+        [
+          "rbc",
+          0.267
+        ]
+      ]
+    },
+    {
+      "query": "does exercise and weight loss help control glucose",
+      "expected_source": "diabetes",
+      "retrieved": [
+        [
+          "diabetes",
+          0.558
+        ],
+        [
+          "wbc",
+          0.171
+        ],
+        [
+          "vitamin_d",
+          0.148
+        ]
+      ]
+    },
+    {
+      "query": "what does low vitamin D do to my bones",
+      "expected_source": "vitamin_d",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.782
+        ],
+        [
+          "wbc",
+          0.362
+        ],
+        [
+          "rbc",
+          0.328
+        ]
+      ]
+    },
+    {
+      "query": "how can I improve my vitamin D level",
+      "expected_source": "vitamin_d",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.557
+        ],
+        [
+          "rbc",
+          0.239
+        ],
+        [
+          "wbc",
+          0.207
+        ]
+      ]
+    },
+    {
+      "query": "sunlight exposure and vitamin D",
+      "expected_source": "vitamin_d",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.534
+        ],
+        [
+          "rbc",
+          0.178
+        ],
+        [
+          "wbc",
+          0.169
+        ]
+      ]
+    },
+    {
+      "query": "muscle weakness and bone pain from vitamin D deficiency",
+      "expected_source": "vitamin_d",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.826
+        ],
+        [
+          "anemia",
+          0.319
+        ],
+        [
+          "rbc",
+          0.219
+        ]
+      ]
+    },
+    {
+      "query": "what does a high white blood cell count mean",
+      "expected_source": "wbc",
+      "retrieved": [
+        [
+          "wbc",
+          0.724
+        ],
+        [
+          "rbc",
+          0.436
+        ],
+        [
+          "platelets",
+          0.373
+        ]
+      ]
+    },
+    {
+      "query": "causes of a low WBC count",
+      "expected_source": "wbc",
+      "retrieved": [
+        [
+          "wbc",
+          0.802
+        ],
+        [
+          "rbc",
+          0.687
+        ],
+        [
+          "platelets",
+          0.609
+        ]
+      ]
+    },
+    {
+      "query": "white blood cells fight infection",
+      "expected_source": "wbc",
+      "retrieved": [
+        [
+          "wbc",
+          0.673
+        ],
+        [
+          "platelets",
+          0.332
+        ],
+        [
+          "rbc",
+          0.295
+        ]
+      ]
+    },
+    {
+      "query": "differential count and WBC result",
+      "expected_source": "wbc",
+      "retrieved": [
+        [
+          "wbc",
+          0.551
+        ],
+        [
+          "platelets",
+          0.366
+        ],
+        [
+          "rbc",
+          0.359
+        ]
+      ]
+    },
+    {
+      "query": "causes of a low red blood cell count",
+      "expected_source": "rbc",
+      "retrieved": [
+        [
+          "rbc",
+          0.835
+        ],
+        [
+          "wbc",
+          0.594
+        ],
+        [
+          "platelets",
+          0.518
+        ]
+      ]
+    },
+    {
+      "query": "what does a high RBC count mean",
+      "expected_source": "rbc",
+      "retrieved": [
+        [
+          "rbc",
+          0.62
+        ],
+        [
+          "wbc",
+          0.403
+        ],
+        [
+          "platelets",
+          0.26
+        ]
+      ]
+    },
+    {
+      "query": "RBC read together with hematocrit",
+      "expected_source": "rbc",
+      "retrieved": [
+        [
+          "rbc",
+          0.53
+        ],
+        [
+          "anemia",
+          0.338
+        ],
+        [
+          "wbc",
+          0.265
+        ]
+      ]
+    },
+    {
+      "query": "red blood cells and vitamin B12 or folate deficiency",
+      "expected_source": "rbc",
+      "retrieved": [
+        [
+          "rbc",
+          0.603
+        ],
+        [
+          "anemia",
+          0.493
+        ],
+        [
+          "wbc",
+          0.349
+        ]
+      ]
+    },
+    {
+      "query": "what do platelets do",
+      "expected_source": "platelets",
+      "retrieved": [
+        [
+          "platelets",
+          0.627
+        ],
+        [
+          "wbc",
+          0.196
+        ],
+        [
+          "vitamin_d",
+          0.178
+        ]
+      ]
+    },
+    {
+      "query": "low platelet count and easy bruising",
+      "expected_source": "platelets",
+      "retrieved": [
+        [
+          "platelets",
+          0.823
+        ],
+        [
+          "wbc",
+          0.387
+        ],
+        [
+          "rbc",
+          0.371
+        ]
+      ]
+    },
+    {
+      "query": "what is thrombocytosis",
+      "expected_source": "platelets",
+      "retrieved": [
+        [
+          "platelets",
+          0.507
+        ],
+        [
+          "wbc",
+          0.265
+        ],
+        [
+          "rbc",
+          0.24
+        ]
+      ]
+    },
+    {
+      "query": "high platelets with inflammation or infection",
+      "expected_source": "platelets",
+      "retrieved": [
+        [
+          "platelets",
+          0.67
+        ],
+        [
+          "wbc",
+          0.396
+        ],
+        [
+          "rbc",
+          0.242
+        ]
+      ]
+    }
+  ],
+  "out_of_scope": [
+    {
+      "query": "what is the capital of France",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.033
+        ],
+        [
+          "diabetes",
+          0.02
+        ],
+        [
+          "rbc",
+          0.001
+        ]
+      ]
+    },
+    {
+      "query": "how do I bake a chocolate cake",
+      "retrieved": [
+        [
+          "anemia",
+          0.038
+        ],
+        [
+          "rbc",
+          0.031
+        ],
+        [
+          "diabetes",
+          0.016
+        ]
+      ]
+    },
+    {
+      "query": "which programming language should I learn first",
+      "retrieved": [
+        [
+          "wbc",
+          0.013
+        ]
+      ]
+    },
+    {
+      "query": "who won the cricket world cup",
+      "retrieved": [
+        [
+          "diabetes",
+          0.068
+        ],
+        [
+          "platelets",
+          0.049
+        ],
+        [
+          "wbc",
+          0.046
+        ]
+      ]
+    },
+    {
+      "query": "what is the price of the latest smartphone",
+      "retrieved": [
+        [
+          "platelets",
+          0.028
+        ]
+      ]
+    },
+    {
+      "query": "what causes high blood pressure",
+      "retrieved": [
+        [
+          "diabetes",
+          0.367
+        ],
+        [
+          "rbc",
+          0.354
+        ],
+        [
+          "platelets",
+          0.285
+        ]
+      ]
+    },
+    {
+      "query": "symptoms of a heart attack",
+      "retrieved": [
+        [
+          "anemia",
+          0.21
+        ],
+        [
+          "platelets",
+          0.178
+        ],
+        [
+          "vitamin_d",
+          0.113
+        ]
+      ]
+    },
+    {
+      "query": "how is a broken arm treated",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.191
+        ],
+        [
+          "platelets",
+          0.113
+        ],
+        [
+          "wbc",
+          0.037
+        ]
+      ]
+    },
+    {
+      "query": "what does a high cholesterol level mean",
+      "retrieved": [
+        [
+          "diabetes",
+          0.276
+        ],
+        [
+          "rbc",
+          0.263
+        ],
+        [
+          "wbc",
+          0.245
+        ]
+      ]
+    },
+    {
+      "query": "how many hours of sleep do adults need",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.033
+        ],
+        [
+          "anemia",
+          0.014
+        ],
+        [
+          "rbc",
+          0.005
+        ]
+      ]
+    },
+    {
+      "query": "side effects of ibuprofen",
+      "retrieved": [
+        [
+          "vitamin_d",
+          0.119
+        ],
+        [
+          "platelets",
+          0.109
+        ],
+        [
+          "anemia",
+          0.074
+        ]
+      ]
+    }
+  ]
+}

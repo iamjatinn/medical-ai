@@ -25,6 +25,7 @@ INDEX_META_PATH = VECTOR_STORE_DIR / "meta.json"
 # ---------------- Models ---------------- #
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "sentence-transformers")   # or "fastembed" (no PyTorch)
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")   # override per environment
 
 # ---------------- RAG ---------------- #

@@ -26,7 +26,7 @@ sys.path.insert(0, str(HERE.parent / "backend"))
 
 logging.disable(logging.CRITICAL)
 
-from config import KNOWLEDGE_FOLDER, MIN_SIMILARITY, TOP_K  # noqa: E402
+from config import EMBEDDING_BACKEND, KNOWLEDGE_FOLDER, MIN_SIMILARITY, TOP_K  # noqa: E402
 from services.index_builder import build_index  # noqa: E402
 
 THRESHOLDS = [0.0, 0.25, 0.35, 0.45, 0.55, 0.65]
@@ -84,7 +84,7 @@ def main():
 
     chosen = metrics(MIN_SIMILARITY)
 
-    print(f"\nRetrieval eval  |  {len(in_scope)} in-scope + {len(out_of_scope)} out-of-scope questions"
+    print(f"\nRetrieval eval [{EMBEDDING_BACKEND}]  |  {len(in_scope)} in-scope + {len(out_of_scope)} out-of-scope questions"
           f"  |  top-k={TOP_K}  threshold={MIN_SIMILARITY}\n")
 
     print("In-scope questions (threshold applied):")
@@ -110,7 +110,13 @@ def main():
 
     out_dir = HERE / "results"
     out_dir.mkdir(exist_ok=True)
-    (out_dir / "retrieval.json").write_text(json.dumps({
+    file_name = (
+        "retrieval.json" if EMBEDDING_BACKEND == "sentence-transformers"
+        else f"retrieval_{EMBEDDING_BACKEND}.json"
+    )
+
+    (out_dir / file_name).write_text(json.dumps({
+        "embedding_backend": EMBEDDING_BACKEND,
         "date": datetime.now().isoformat(timespec="seconds"),
         "top_k": TOP_K, "threshold": MIN_SIMILARITY,
         "questions": len(in_scope) + len(out_of_scope),
@@ -121,7 +127,7 @@ def main():
 
     print(f"\nSummary @ threshold {MIN_SIMILARITY}: hit@1 {chosen['hit@1']:.0%}  hit@3 {chosen['hit@3']:.0%}  "
           f"MRR {chosen['mrr']:.2f}  abstain {chosen['abstain_rate']:.0%}")
-    print("Saved evals/results/retrieval.json")
+    print(f"Saved evals/results/{file_name}")
 
 
 if __name__ == "__main__":

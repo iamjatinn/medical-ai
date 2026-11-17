@@ -11,7 +11,7 @@ WORKDIR /app
 #    CPU-only PyTorch keeps the image far smaller than the default (CUDA) build.
 RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
 
-COPY backend/requirements.txt backend/requirements.txt
+COPY backend/requirements.txt backend/requirements-base.txt backend/
 RUN pip install -r backend/requirements.txt
 
 # 2) Download the embedding model once at build time, so containers start fast

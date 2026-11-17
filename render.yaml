@@ -1,0 +1,24 @@
+# Render "Blueprint": the backend API as a Docker web service.
+# Create it in Render with  New > Blueprint  and point it at this repository.
+# The database lives at Neon (see DEPLOY.md); the frontend lives at Vercel.
+services:
+  - type: web
+    name: medical-ai-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.prod
+    dockerContext: .
+    plan: starter                   # the free plan has too little memory/CPU for FAISS + embeddings
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL           # paste the Neon connection string (Render will not store it in git)
+        sync: false
+      - key: GEMINI_API_KEY         # your Google AI Studio key
+        sync: false
+      - key: CORS_ORIGINS           # your Vercel URL, e.g. https://medical-ai.vercel.app
+        sync: false
+      - key: JWT_SECRET             # generated for you: a long random value
+        generateValue: true
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: APP_ENV
+        value: production

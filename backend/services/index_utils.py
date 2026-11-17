@@ -2,7 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from config import CHUNK_OVERLAP, CHUNK_SIZE, EMBEDDING_MODEL
+from config import CHUNK_OVERLAP, CHUNK_SIZE, EMBEDDING_BACKEND, EMBEDDING_MODEL
 
 
 def knowledge_fingerprint(folder: Path) -> str:
@@ -12,7 +12,7 @@ def knowledge_fingerprint(folder: Path) -> str:
 
     digest = hashlib.sha256()
 
-    digest.update(f"{EMBEDDING_MODEL}|{CHUNK_SIZE}|{CHUNK_OVERLAP}".encode())
+    digest.update(f"{EMBEDDING_BACKEND}|{EMBEDDING_MODEL}|{CHUNK_SIZE}|{CHUNK_OVERLAP}".encode())
 
     for path in sorted(Path(folder).glob("*.txt")):
         digest.update(path.name.encode())

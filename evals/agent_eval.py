@@ -33,6 +33,7 @@ ROOT = HERE.parent
 API = os.getenv("API_URL", "http://localhost:8000")
 SAMPLE = ROOT / "data" / "sample_reports" / "sample_medical_report.pdf"
 PAUSE_SECONDS = float(os.getenv("EVAL_PAUSE", "8"))      # stay under API rate limits
+LABEL = os.getenv("EVAL_LABEL", "default")               # names the results file, e.g. the model
 RETRIES = 3
 RETRY_WAIT = 45.0
 
@@ -48,9 +49,20 @@ def is_api_error(answer: str) -> bool:
     return any(marker in answer for marker in API_ERROR_MARKERS)
 
 
-def upload_report(client):
+def register_account(client):
+    """Create a throw-away user and return the auth header."""
+    email = f"eval-{int(time.time())}@example.com"
+    response = client.post(f"{API}/auth/register", json={"email": email, "password": "eval-password-123"})
+    response.raise_for_status()
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
+def upload_report(client, headers):
     with open(SAMPLE, "rb") as file:
-        response = client.post(f"{API}/upload-report", files={"file": (SAMPLE.name, file, "application/pdf")})
+        response = client.post(
+            f"{API}/upload-report", headers=headers,
+            files={"file": (SAMPLE.name, file, "application/pdf")},
+        )
     response.raise_for_status()
     return response.json()["result"]["report_id"]
 
@@ -94,7 +106,10 @@ def main():
 
     with httpx.Client(timeout=180) as client:
 
-        print(f"\nAgent eval  |  {len(cases)} questions  |  {API}\n")
+        headers = register_account(client)
+        created_reports = []
+
+        print(f"\nAgent eval [{LABEL}]  |  {len(cases)} questions  |  {API}\n")
 
         for case in cases:
 
@@ -103,12 +118,14 @@ def main():
             errored = False
 
             try:
-                report_id = upload_report(client)
+                report_id = upload_report(client, headers)
+                created_reports.append(report_id)
 
                 # An API error (quota, outage) is NOT a quality failure: retry with
                 # a pause, and if it keeps failing report the case as ERROR.
                 for attempt in range(1, RETRIES + 1):
-                    reply = client.post(f"{API}/chat", json={"report_id": report_id, "question": case["question"]})
+                    reply = client.post(f"{API}/chat", headers=headers,
+                                        json={"report_id": report_id, "question": case["question"]})
                     reply.raise_for_status()
                     body = reply.json()
                     answer, tools_used = body["answer"], body.get("tools_used", [])
@@ -141,6 +158,10 @@ def main():
 
             time.sleep(PAUSE_SECONDS)
 
+        # Tidy up: the eval should not leave its test reports behind.
+        for report_id in created_reports:
+            client.delete(f"{API}/reports/{report_id}", headers=headers)
+
     by_category = defaultdict(lambda: [0, 0])
 
     scored = [r for r in results if r["status"] != "ERROR"]
@@ -164,14 +185,15 @@ def main():
 
     out_dir = HERE / "results"
     out_dir.mkdir(exist_ok=True)
-    (out_dir / "agent.json").write_text(json.dumps({
+    (out_dir / f"agent_{LABEL}.json").write_text(json.dumps({
+        "label": LABEL,
         "date": datetime.now().isoformat(timespec="seconds"),
         "passed": passed, "scored": len(scored), "errors": errors, "total": len(results),
         "by_category": {k: {"passed": v[0], "total": v[1]} for k, v in by_category.items()},
         "cases": results,
     }, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    print("Saved evals/results/agent.json")
+    print(f"Saved evals/results/agent_{LABEL}.json")
 
 
 if __name__ == "__main__":

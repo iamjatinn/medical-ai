@@ -13,7 +13,20 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from config import BASE_DIR
 
-DATABASE_URL = os.getenv("DATABASE_URL") or f"sqlite:///{(BASE_DIR / 'medical_ai.db').as_posix()}"
+def normalize_url(url: str) -> str:
+    """Hosting providers (Neon, Render, Heroku...) give URLs that start with
+    postgres:// or postgresql://. SQLAlchemy needs the driver named explicitly."""
+
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+
+    return url
+
+
+DATABASE_URL = normalize_url(
+    os.getenv("DATABASE_URL") or f"sqlite:///{(BASE_DIR / 'medical_ai.db').as_posix()}"
+)
 
 
 class Base(DeclarativeBase):
@@ -22,6 +35,7 @@ class Base(DeclarativeBase):
 
 def make_engine(url: str = DATABASE_URL):
 
+    url = normalize_url(url)
     options = {"pool_pre_ping": True}   # re-connects if the database restarted
 
     if url.startswith("sqlite"):
