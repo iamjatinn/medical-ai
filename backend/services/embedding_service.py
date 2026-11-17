@@ -75,7 +75,7 @@ def _encode(texts) -> np.ndarray:
     model = _get_model()
 
     if EMBEDDING_BACKEND == "fastembed":
-        vectors = np.array(list(model.embed(list(texts))), dtype="float32")
+        vectors = np.array(list(model.embed(list(texts), batch_size=32)), dtype="float32")
     else:
         vectors = np.asarray(
             model.encode(list(texts), convert_to_numpy=True, show_progress_bar=False),

@@ -27,6 +27,14 @@ RUN python -c "from fastembed import TextEmbedding; TextEmbedding('sentence-tran
 COPY backend/ backend/
 COPY data/ data/
 
+# 3b) Build the search index now, while building the image, so the server only has to
+#     LOAD it at start. Building it at start-up needs far more memory than serving
+#     (it crashed a 512 MB instance). The index is rebuilt automatically if the
+#     knowledge files ever change.
+WORKDIR /app/backend
+RUN python -c "from services.index_builder import build_index; build_index()"
+WORKDIR /app
+
 # 4) Do not run as root. The app writes only to uploads/ and vector_store/.
 RUN useradd --create-home --uid 10001 app \
  && mkdir -p backend/uploads backend/vector_store \
