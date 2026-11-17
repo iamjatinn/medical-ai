@@ -1,10 +1,12 @@
 import re
 
+from services.parser_service import RANGE_SEPARATORS
+
 NUMBER = r"\d[\d,]*(?:\.\d+)?"
 
 VALUE_RE = re.compile(rf"^\s*({NUMBER})\s*(.*)$")
 
-BETWEEN_RE = re.compile(rf"^\s*({NUMBER})\s*(?:-|–|—|to)\s*({NUMBER})")
+BETWEEN_RE = re.compile(rf"^\s*({NUMBER})\s*(?:{RANGE_SEPARATORS})\s*({NUMBER})")
 
 UPPER_ONLY_RE = re.compile(rf"^\s*[<≤]=?\s*({NUMBER})")
 

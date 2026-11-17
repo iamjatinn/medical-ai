@@ -22,8 +22,13 @@ import re
 
 NUMBER = r"\d[\d,]*(?:\.\d+)?"
 
+# What can sit between the two numbers of a range. Besides the plain hyphen and
+# the en / em dash, PDF fonts often turn a dash into a minus sign or a middle dot,
+# and some labs write "to" or "~".
+RANGE_SEPARATORS = "-|–|—|−|‒|·|•|~|to"
+
 RANGE = (
-    rf"(?:{NUMBER}\s*(?:-|–|—|to)\s*{NUMBER}"
+    rf"(?:{NUMBER}\s*(?:{RANGE_SEPARATORS})\s*{NUMBER}"
     rf"|[<>≤≥]=?\s*{NUMBER})"
 )
 
@@ -49,7 +54,7 @@ HEADER_WORDS = {
 
 ROW_RE = re.compile(
     rf"""^
-    (?P<parameter>[A-Za-z][A-Za-z0-9 ()/%.,'\-]*?)
+    (?P<parameter>(?:\d{{1,3}}-)?[A-Za-z][A-Za-z0-9 ()/%.,'\-]*?)
     \s+(?P<value>{NUMBER})
     (?:\s*(?P<unit>[^\s\d][^\s]*))?
     \s+(?P<range>{RANGE})
@@ -65,6 +70,20 @@ VALUE_LINE_RE = re.compile(rf"^\s*{NUMBER}(?:\s*[^\s\d]\S*)?\s*$")
 
 UNIT_LINE_RE = re.compile(r"^[^\s\d]\S{0,14}$")
 
+# "mL/min/1.73m2 > 60": the unit and the range share one line
+UNIT_RANGE_LINE_RE = re.compile(
+    rf"^(?P<unit>[^\s\d]\S{{0,19}})\s+(?P<range>{RANGE})\s*$"
+)
+
+# "WHITE BLOOD CELL COUNT 10.2": the name and the value share one line
+NAME_VALUE_RE = re.compile(
+    rf"^(?P<name>(?:\d{{1,3}}-)?[A-Za-z][A-Za-z0-9 ()/%.,'\-]*?)\s+(?P<value>{NUMBER})(?:\s+(?P<flag>{STATUS}))?\s*$",
+    re.IGNORECASE,
+)
+
+# "15.8 H": a value with the flag letter glued to it
+VALUE_FLAG_RE = re.compile(rf"^(?P<value>{NUMBER})\s+(?P<flag>{STATUS})\s*$", re.IGNORECASE)
+
 
 def _clean_status(word):
 
@@ -75,7 +94,7 @@ def _is_label(line):
     """A line that could be a test name (not a number, not a column header)."""
 
     return (
-        bool(re.match(r"^[A-Za-z]", line))
+        bool(re.match(r"^(?:\d{1,3}-)?[A-Za-z]", line))
         and line.strip().lower() not in HEADER_WORDS
         and not RANGE_LINE_RE.match(line)
     )
@@ -110,23 +129,56 @@ def _cell_records(lines, skip):
 
     for index, line in enumerate(lines):
 
-        if index in skip or not RANGE_LINE_RE.match(line):
+        if index in skip:
+            continue
+
+        unit_range = UNIT_RANGE_LINE_RE.match(line)
+
+        if not (RANGE_LINE_RE.match(line) or unit_range):
             continue
 
         value_line = lines[index - 1] if index >= 1 else ""
         before_value = lines[index - 2] if index >= 2 else ""
         before_unit = lines[index - 3] if index >= 3 else ""
 
-        if VALUE_LINE_RE.match(value_line) and _is_label(before_value):
+        range_text = line.strip()
+        inline_flag = ""
+
+        if unit_range:
+            # value / "unit range" / status
+            if not (VALUE_LINE_RE.match(value_line) and _is_label(before_value)):
+                continue
+            flagged = VALUE_FLAG_RE.match(value_line)
+            if flagged:
+                value = f"{flagged.group('value')} {unit_range.group('unit')}"
+                inline_flag = flagged.group("flag")
+            else:
+                value = f"{value_line} {unit_range.group('unit')}"
+            parameter = before_value
+            range_text = unit_range.group("range")
+
+        elif VALUE_LINE_RE.match(value_line) and _is_label(before_value):
             value, parameter = value_line, before_value
 
-        elif (
-            UNIT_LINE_RE.match(value_line)
-            and VALUE_LINE_RE.match(before_value)
-            and _is_label(before_unit)
-        ):
-            # value and unit are on separate lines
-            value, parameter = f"{before_value} {value_line}", before_unit
+        elif UNIT_LINE_RE.match(value_line):
+            # the unit is on its own line; the value is above it
+            flagged = VALUE_FLAG_RE.match(before_value)
+            named = NAME_VALUE_RE.match(before_value)
+
+            if VALUE_LINE_RE.match(before_value) and _is_label(before_unit):
+                value, parameter = f"{before_value} {value_line}", before_unit
+                if flagged:
+                    value = f"{flagged.group('value')} {value_line}"
+                    inline_flag = flagged.group("flag")
+
+            elif named:
+                # "WHITE BLOOD CELL COUNT 10.2" / "x10^3/uL" / range
+                value = f"{named.group('value')} {value_line}"
+                parameter = named.group("name")
+                inline_flag = named.group("flag") or ""
+
+            else:
+                continue
 
         else:
             continue
@@ -136,8 +188,8 @@ def _cell_records(lines, skip):
         records.append((index, index, {
             "parameter": parameter.strip(),
             "value": value.strip(),
-            "reference_range": line.strip(),
-            "status": _clean_status(next_line),
+            "reference_range": range_text,
+            "status": _clean_status(next_line) or _clean_status(inline_flag),
         }))
 
     return records

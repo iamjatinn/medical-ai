@@ -114,3 +114,19 @@ class FingerprintTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class QueryExpansionTests(unittest.TestCase):
+
+    def test_abbreviation_is_spelled_out(self):
+        from services.query_builder import build_query
+
+        query = build_query({"parameter": "TG", "calculated_status": "High"})
+        self.assertIn("triglycerides", query)
+        self.assertTrue(query.startswith("TG "))
+
+    def test_full_names_are_unchanged(self):
+        from services.query_builder import build_query
+
+        query = build_query({"parameter": "Hemoglobin", "calculated_status": "Low"})
+        self.assertEqual(query, "Hemoglobin Low meaning causes symptoms treatment diet")
