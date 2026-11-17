@@ -2,7 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from config import CHUNK_OVERLAP, CHUNK_SIZE, EMBEDDING_BACKEND, EMBEDDING_MODEL
+from config import CHUNK_OVERLAP, CHUNK_SIZE, EMBEDDING_BACKEND, EMBEDDING_MODEL, SOURCES_MANIFEST
 
 
 def knowledge_fingerprint(folder: Path) -> str:
@@ -17,6 +17,10 @@ def knowledge_fingerprint(folder: Path) -> str:
     for path in sorted(Path(folder).glob("*.txt")):
         digest.update(path.name.encode())
         digest.update(path.read_bytes())
+
+    manifest = Path(SOURCES_MANIFEST)
+    if manifest.exists():
+        digest.update(manifest.read_bytes())
 
     return digest.hexdigest()
 

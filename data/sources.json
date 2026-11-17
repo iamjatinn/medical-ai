@@ -1,0 +1,462 @@
+{
+  "mplus_complete_blood_count_cbc.txt": {
+    "title": "Complete Blood Count (CBC)",
+    "url": "https://medlineplus.gov/lab-tests/complete-blood-count-cbc/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 3590
+  },
+  "mplus_hemoglobin_test.txt": {
+    "title": "Hemoglobin Test",
+    "url": "https://medlineplus.gov/lab-tests/hemoglobin-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4354
+  },
+  "mplus_hematocrit_test.txt": {
+    "title": "Hematocrit Test",
+    "url": "https://medlineplus.gov/lab-tests/hematocrit-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5002
+  },
+  "mplus_red_blood_cell_rbc_count.txt": {
+    "title": "Red Blood Cell (RBC) Count",
+    "url": "https://medlineplus.gov/lab-tests/red-blood-cell-rbc-count/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4408
+  },
+  "mplus_red_blood_cell_rbc_indices.txt": {
+    "title": "Red Blood Cell (RBC) Indices",
+    "url": "https://medlineplus.gov/lab-tests/red-blood-cell-rbc-indices/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5065
+  },
+  "mplus_mcv_mean_corpuscular_volume.txt": {
+    "title": "MCV (Mean Corpuscular Volume)",
+    "url": "https://medlineplus.gov/lab-tests/mcv-mean-corpuscular-volume/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4276
+  },
+  "mplus_rdw_red_cell_distribution_width.txt": {
+    "title": "RDW (Red Cell Distribution Width)",
+    "url": "https://medlineplus.gov/lab-tests/rdw-red-cell-distribution-width/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4974
+  },
+  "mplus_white_blood_count_wbc.txt": {
+    "title": "White Blood Count (WBC)",
+    "url": "https://medlineplus.gov/lab-tests/white-blood-count-wbc/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6316
+  },
+  "mplus_blood_differential.txt": {
+    "title": "Blood Differential",
+    "url": "https://medlineplus.gov/lab-tests/blood-differential/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4666
+  },
+  "mplus_platelet_tests.txt": {
+    "title": "Platelet Tests",
+    "url": "https://medlineplus.gov/lab-tests/platelet-tests/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 7946
+  },
+  "mplus_mpv_blood_test.txt": {
+    "title": "MPV Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/mpv-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4215
+  },
+  "mplus_reticulocyte_count.txt": {
+    "title": "Reticulocyte Count",
+    "url": "https://medlineplus.gov/lab-tests/reticulocyte-count/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5719
+  },
+  "mplus_blood_glucose_test.txt": {
+    "title": "Blood Glucose Test",
+    "url": "https://medlineplus.gov/lab-tests/blood-glucose-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 9879
+  },
+  "mplus_hemoglobin_a1c_hba1c_test.txt": {
+    "title": "Hemoglobin A1C (HbA1c) Test",
+    "url": "https://medlineplus.gov/lab-tests/hemoglobin-a1c-hba1c-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6281
+  },
+  "mplus_diabetes_tests.txt": {
+    "title": "Diabetes Tests",
+    "url": "https://medlineplus.gov/lab-tests/diabetes-tests/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 9540
+  },
+  "mplus_insulin_in_blood_test.txt": {
+    "title": "Insulin in Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/insulin-in-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 8150
+  },
+  "mplus_cholesterol_levels.txt": {
+    "title": "Cholesterol Levels",
+    "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 7878
+  },
+  "mplus_triglycerides_test.txt": {
+    "title": "Triglycerides Test",
+    "url": "https://medlineplus.gov/lab-tests/triglycerides-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6864
+  },
+  "mplus_heart_disease_risk_assessment.txt": {
+    "title": "Heart Disease Risk Assessment",
+    "url": "https://medlineplus.gov/lab-tests/heart-disease-risk-assessment/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6016
+  },
+  "mplus_basic_metabolic_panel_bmp.txt": {
+    "title": "Basic Metabolic Panel (BMP)",
+    "url": "https://medlineplus.gov/lab-tests/basic-metabolic-panel-bmp/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4295
+  },
+  "mplus_comprehensive_metabolic_panel_cmp.txt": {
+    "title": "Comprehensive Metabolic Panel (CMP)",
+    "url": "https://medlineplus.gov/lab-tests/comprehensive-metabolic-panel-cmp/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4748
+  },
+  "mplus_electrolyte_panel.txt": {
+    "title": "Electrolyte Panel",
+    "url": "https://medlineplus.gov/lab-tests/electrolyte-panel/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6469
+  },
+  "mplus_sodium_blood_test.txt": {
+    "title": "Sodium Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/sodium-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4830
+  },
+  "mplus_potassium_blood_test.txt": {
+    "title": "Potassium Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/potassium-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5040
+  },
+  "mplus_chloride_blood_test.txt": {
+    "title": "Chloride Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/chloride-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4033
+  },
+  "mplus_calcium_blood_test.txt": {
+    "title": "Calcium Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/calcium-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6294
+  },
+  "mplus_magnesium_blood_test.txt": {
+    "title": "Magnesium Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/magnesium-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6710
+  },
+  "mplus_phosphate_in_blood.txt": {
+    "title": "Phosphate in Blood",
+    "url": "https://medlineplus.gov/lab-tests/phosphate-in-blood/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 7573
+  },
+  "mplus_creatinine_test.txt": {
+    "title": "Creatinine Test",
+    "url": "https://medlineplus.gov/lab-tests/creatinine-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 8625
+  },
+  "mplus_bun_blood_urea_nitrogen.txt": {
+    "title": "BUN (Blood Urea Nitrogen)",
+    "url": "https://medlineplus.gov/lab-tests/bun-blood-urea-nitrogen/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 3931
+  },
+  "mplus_estimated_glomerular_filtration_rate_egfr_and_gfr_tests.txt": {
+    "title": "Estimated Glomerular Filtration Rate (eGFR) and GFR Tests",
+    "url": "https://medlineplus.gov/lab-tests/estimated-glomerular-filtration-rate-egfr-and-gfr-tests/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 9135
+  },
+  "mplus_uric_acid_test.txt": {
+    "title": "Uric Acid Test",
+    "url": "https://medlineplus.gov/lab-tests/uric-acid-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6896
+  },
+  "mplus_liver_function_tests.txt": {
+    "title": "Liver Function Tests",
+    "url": "https://medlineplus.gov/lab-tests/liver-function-tests/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5559
+  },
+  "mplus_alt_blood_test.txt": {
+    "title": "ALT Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/alt-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4880
+  },
+  "mplus_ast_test.txt": {
+    "title": "AST Test",
+    "url": "https://medlineplus.gov/lab-tests/ast-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 3992
+  },
+  "mplus_alkaline_phosphatase.txt": {
+    "title": "Alkaline Phosphatase",
+    "url": "https://medlineplus.gov/lab-tests/alkaline-phosphatase/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5455
+  },
+  "mplus_bilirubin_blood_test.txt": {
+    "title": "Bilirubin Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/bilirubin-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4987
+  },
+  "mplus_albumin_blood_test.txt": {
+    "title": "Albumin Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/albumin-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5188
+  },
+  "mplus_total_protein_and_albumin_globulin_a_g_ratio.txt": {
+    "title": "Total Protein and Albumin/Globulin (A/G) Ratio",
+    "url": "https://medlineplus.gov/lab-tests/total-protein-and-albumin-globulin-a-g-ratio/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5882
+  },
+  "mplus_gamma_glutamyl_transferase_ggt_test.txt": {
+    "title": "Gamma-glutamyl Transferase (GGT) Test",
+    "url": "https://medlineplus.gov/lab-tests/gamma-glutamyl-transferase-ggt-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4641
+  },
+  "mplus_tsh_thyroid_stimulating_hormone_test.txt": {
+    "title": "TSH (Thyroid-stimulating hormone) Test",
+    "url": "https://medlineplus.gov/lab-tests/tsh-thyroid-stimulating-hormone-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6568
+  },
+  "mplus_thyroxine_t4_test.txt": {
+    "title": "Thyroxine (T4) Test",
+    "url": "https://medlineplus.gov/lab-tests/thyroxine-t4-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 8116
+  },
+  "mplus_triiodothyronine_t3_tests.txt": {
+    "title": "Triiodothyronine (T3) Tests",
+    "url": "https://medlineplus.gov/lab-tests/triiodothyronine-t3-tests/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5409
+  },
+  "mplus_vitamin_d_test.txt": {
+    "title": "Vitamin D Test",
+    "url": "https://medlineplus.gov/lab-tests/vitamin-d-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6837
+  },
+  "mplus_vitamin_b_test.txt": {
+    "title": "Vitamin B Test",
+    "url": "https://medlineplus.gov/lab-tests/vitamin-b-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 7171
+  },
+  "mplus_iron_tests.txt": {
+    "title": "Iron Tests",
+    "url": "https://medlineplus.gov/lab-tests/iron-tests/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6046
+  },
+  "mplus_ferritin_blood_test.txt": {
+    "title": "Ferritin Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/ferritin-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5167
+  },
+  "mplus_homocysteine_test.txt": {
+    "title": "Homocysteine Test",
+    "url": "https://medlineplus.gov/lab-tests/homocysteine-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 6555
+  },
+  "mplus_c_reactive_protein_crp_test.txt": {
+    "title": "C-Reactive Protein (CRP) Test",
+    "url": "https://medlineplus.gov/lab-tests/c-reactive-protein-crp-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4476
+  },
+  "mplus_erythrocyte_sedimentation_rate_esr.txt": {
+    "title": "Erythrocyte Sedimentation Rate (ESR)",
+    "url": "https://medlineplus.gov/lab-tests/erythrocyte-sedimentation-rate-esr/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 4880
+  },
+  "mplus_how_to_understand_your_lab_results.txt": {
+    "title": "How to Understand Your Lab Results",
+    "url": "https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 8746
+  },
+  "mplus_fasting_for_a_blood_test.txt": {
+    "title": "Fasting for a Blood Test",
+    "url": "https://medlineplus.gov/lab-tests/fasting-for-a-blood-test/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5274
+  },
+  "mplus_what_you_need_to_know_about_blood_testing.txt": {
+    "title": "What You Need to Know About Blood Testing",
+    "url": "https://medlineplus.gov/lab-tests/what-you-need-to-know-about-blood-testing/",
+    "source": "MedlinePlus, National Library of Medicine (NLM), https://medlineplus.gov",
+    "downloaded": "2026-11-18",
+    "license": "U.S. government work (not copyrighted); credit MedlinePlus/NLM",
+    "characters": 5006
+  },
+  "anemia.txt": {
+    "title": "Anemia (project note)",
+    "url": "",
+    "source": "AuraHealth project notes (general information)",
+    "license": "written for this project"
+  },
+  "diabetes.txt": {
+    "title": "High blood sugar (project note)",
+    "url": "",
+    "source": "AuraHealth project notes (general information)",
+    "license": "written for this project"
+  },
+  "vitamin_d.txt": {
+    "title": "Vitamin D (project note)",
+    "url": "",
+    "source": "AuraHealth project notes (general information)",
+    "license": "written for this project"
+  },
+  "wbc.txt": {
+    "title": "White blood cells (project note)",
+    "url": "",
+    "source": "AuraHealth project notes (general information)",
+    "license": "written for this project"
+  },
+  "rbc.txt": {
+    "title": "Red blood cells (project note)",
+    "url": "",
+    "source": "AuraHealth project notes (general information)",
+    "license": "written for this project"
+  },
+  "platelets.txt": {
+    "title": "Platelets (project note)",
+    "url": "",
+    "source": "AuraHealth project notes (general information)",
+    "license": "written for this project"
+  }
+}

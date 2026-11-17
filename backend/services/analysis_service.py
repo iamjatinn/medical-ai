@@ -100,4 +100,18 @@ def render_markdown(analysis: ReportAnalysis) -> str:
         analysis.disclaimer,
     ]
 
+    sources = getattr(analysis, "sources", [])
+
+    if sources:
+        source_lines = [
+            f"- {s.title}" + (f" ({s.url})" if s.url else "") for s in sources
+        ]
+
+        parts += ["---", "# 📚 Sources", chr(10).join(source_lines)]
+
+        credits = sorted({s.credit for s in sources if s.credit})
+
+        if credits:
+            parts.append("Information adapted from: " + "; ".join(credits) + ".")
+
     return "\n\n".join(parts)

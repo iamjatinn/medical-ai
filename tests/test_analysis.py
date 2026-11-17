@@ -101,7 +101,10 @@ class ExplainReportTests(unittest.TestCase):
 
     def test_success_returns_summary_text_and_structured_data(self):
 
-        with mock.patch.object(ai_service, "retrieve_knowledge", return_value=[]), \
+        sources = [{"title": "Hemoglobin Test", "url": "https://medlineplus.gov/lab-tests/hemoglobin-test/",
+                    "credit": "MedlinePlus, National Library of Medicine"}]
+
+        with mock.patch.object(ai_service, "retrieve_with_sources", return_value=([], sources)), \
              mock.patch.object(ai_service, "generate_structured",
                                return_value=(analysis([explanation("Hemoglobin")]), None)):
 
@@ -110,9 +113,30 @@ class ExplainReportTests(unittest.TestCase):
         self.assertIn("Hemoglobin (Low)", result["summary"])
         self.assertEqual(result["analysis"]["overall_risk"], "moderate")
 
+        # citations come from the real search results and appear in the text
+        self.assertEqual(result["analysis"]["sources"][0]["title"], "Hemoglobin Test")
+        self.assertIn("Sources", result["summary"])
+        self.assertIn("medlineplus.gov/lab-tests/hemoglobin-test", result["summary"])
+        self.assertIn("MedlinePlus, National Library of Medicine", result["summary"])
+
+    def test_the_ai_cannot_invent_sources(self):
+        """Whatever the model puts in 'sources', only retrieved sources are kept."""
+
+        fake = analysis([explanation("Hemoglobin")]).model_copy(
+            update={"sources": [{"title": "Made-up Journal", "url": "http://fake"}]}
+        )
+
+        with mock.patch.object(ai_service, "retrieve_with_sources", return_value=([], [])), \
+             mock.patch.object(ai_service, "generate_structured", return_value=(fake, None)):
+
+            result = ai_service.explain_report(FINDINGS)
+
+        self.assertEqual(result["analysis"]["sources"], [])
+        self.assertNotIn("Made-up Journal", result["summary"])
+
     def test_ai_failure_returns_friendly_message_and_no_analysis(self):
 
-        with mock.patch.object(ai_service, "retrieve_knowledge", return_value=[]), \
+        with mock.patch.object(ai_service, "retrieve_with_sources", return_value=([], [])), \
              mock.patch.object(ai_service, "generate_structured",
                                return_value=(None, "AI is down")):
 

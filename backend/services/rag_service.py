@@ -21,6 +21,9 @@ class RAGService:
 
     Embeddings are normalised, so an inner-product index (IndexFlatIP)
     returns cosine similarity: higher score = more similar.
+
+    Every chunk can carry a `source` (title, url, credit) so answers can say
+    where the information came from.
     """
 
     def __init__(self, dimension: int | None = None):
@@ -30,15 +33,26 @@ class RAGService:
         self.index = faiss.IndexFlatIP(self.dimension)
 
         self.documents: list[str] = []
+        self.sources: list[dict] = []          # parallel to documents
 
     # ---------------- indexing ---------------- #
 
-    def add_documents(self, texts):
+    def add_documents(self, texts, sources=None):
+        """Index chunks. `sources` (optional) is a list of dicts, one per text."""
 
-        texts = [text for text in texts if text and text.strip()]
+        texts = list(texts)
+        sources = list(sources) if sources is not None else [{} for _ in texts]
 
-        if not texts:
+        if len(sources) != len(texts):
+            raise ValueError("sources must have one entry per text")
+
+        keep = [i for i, text in enumerate(texts) if text and text.strip()]
+
+        if not keep:
             return
+
+        texts = [texts[i] for i in keep]
+        sources = [sources[i] for i in keep]
 
         embeddings = embedding_service.generate_embeddings(texts)
 
@@ -47,12 +61,13 @@ class RAGService:
         self.index.add(embeddings)
 
         self.documents.extend(texts)
+        self.sources.extend(sources)
 
         logger.info("Added %d chunks to the FAISS index.", len(texts))
 
-    def add_document(self, text: str):
+    def add_document(self, text: str, source: dict | None = None):
 
-        self.add_documents([text])
+        self.add_documents([text], [source or {}])
 
     # ---------------- search ---------------- #
 
@@ -78,6 +93,7 @@ class RAGService:
             results.append({
                 "text": self.documents[idx],
                 "score": float(score),
+                "source": self.sources[idx],
             })
 
         return results
@@ -99,7 +115,7 @@ class RAGService:
         faiss.write_index(self.index, str(index_path))
 
         with open(document_path, "w", encoding="utf-8") as file:
-            json.dump(self.documents, file, ensure_ascii=False)
+            json.dump({"documents": self.documents, "sources": self.sources}, file, ensure_ascii=False)
 
         logger.info("Saved FAISS index to %s", index_path)
 
@@ -113,10 +129,17 @@ class RAGService:
         self.dimension = self.index.d
 
         with open(document_path, "r", encoding="utf-8") as file:
-            self.documents = json.load(file)
+            stored = json.load(file)
 
-        if self.index.ntotal != len(self.documents):
+        if isinstance(stored, list):               # older format: just the texts
+            self.documents, self.sources = stored, [{} for _ in stored]
+        else:
+            self.documents = stored["documents"]
+            self.sources = stored.get("sources") or [{} for _ in self.documents]
+
+        if not (self.index.ntotal == len(self.documents) == len(self.sources)):
             raise ValueError(
                 "Vector index and document store are out of sync "
-                f"({self.index.ntotal} vectors vs {len(self.documents)} documents)."
+                f"({self.index.ntotal} vectors, {len(self.documents)} documents, "
+                f"{len(self.sources)} sources)."
             )

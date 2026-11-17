@@ -16,6 +16,7 @@ PROJECT_ROOT = BASE_DIR.parent                      # repository root
 UPLOAD_DIR = BASE_DIR / "uploads"
 
 KNOWLEDGE_FOLDER = PROJECT_ROOT / "data" / "medical_docs"
+SOURCES_MANIFEST = PROJECT_ROOT / "data" / "sources.json"   # title / url / credit of each document
 
 VECTOR_STORE_DIR = BASE_DIR / "vector_store"
 VECTOR_INDEX_PATH = VECTOR_STORE_DIR / "medical.index"

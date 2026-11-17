@@ -94,7 +94,16 @@ class ReportTools:
 
         results = get_rag().search(str(query)[:MAX_QUERY_CHARS], k=TOP_K)
 
-        return {"passages": [result["text"] for result in results]}
+        return {
+            "passages": [
+                {
+                    "text": result["text"],
+                    "source": (result.get("source") or {}).get("title", ""),
+                    "url": (result.get("source") or {}).get("url", ""),
+                }
+                for result in results
+            ]
+        }
 
     def get_report_findings(self, status: str = None) -> dict:
         """List the lab results in this report, optionally filtered by status."""

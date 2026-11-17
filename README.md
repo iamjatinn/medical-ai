@@ -31,7 +31,7 @@ knowledge instead of relying on memory.
 
 ### The RAG part
 
-- Knowledge lives in `data/medical_docs/*.txt`. Files are split into ~500-character chunks (50 overlap, cut at word boundaries).
+- Knowledge lives in `data/medical_docs/*.txt`: 53 MedlinePlus lab-test pages (U.S. National Library of Medicine, public domain, credited) plus 6 short project notes. See [data/SOURCES.md](data/SOURCES.md). Files are split into ~500-character chunks (50 overlap, cut at word boundaries).
 - Chunks are embedded with `all-MiniLM-L6-v2` (384 dimensions, L2-normalised), so a FAISS inner-product index (`IndexFlatIP`) returns **cosine similarity**.
 - Only chunks scoring ≥ `MIN_SIMILARITY` (0.45) are used, so an unrelated question retrieves nothing instead of the "least bad" chunk.
 - The index is saved to `backend/vector_store/` and re-used on the next start. A SHA-256 fingerprint of the knowledge files, chunk settings and embedding model decides whether it must be rebuilt, so editing a `.txt` file is picked up automatically.
@@ -91,20 +91,20 @@ backend\venv\Scripts\python evals\retrieval_eval.py     # no API key needed
 backend\venv\Scripts\python evals\agent_eval.py         # needs the stack running and Gemini quota
 ```
 
-**Retrieval** (`evals/retrieval_eval.py`): 24 questions with a known source document, plus 11 unrelated or out-of-knowledge questions that should return nothing.
+**Retrieval** (`evals/retrieval_eval.py`): 40 questions whose answer should be in the knowledge base (each with the acceptable source pages) plus 10 unrelated or uncovered questions that should return nothing, run against the real index (724 chunks from 59 documents).
 
 | Similarity threshold | hit@1 | hit@3 | MRR | unrelated questions correctly rejected |
 |---|---|---|---|---|
-| 0.25 | 1.00 | 1.00 | 1.00 | 82 % |
-| 0.35 | 1.00 | 1.00 | 1.00 | 91 % (a blood-pressure question scored 0.37) |
-| **0.45 (used)** | **1.00** | **1.00** | **1.00** | **100 %** |
-| 0.55 | 0.71 | 0.71 | 0.71 | 100 % |
+| 0.35 | 0.97 | 1.00 | 0.98 | 80 % |
+| **0.45 (used)** | **0.97** | **1.00** | **0.98** | **80 %** |
+| 0.50 | 0.95 | 0.95 | 0.95 | 100 % |
+| 0.55 | 0.85 | 0.85 | 0.85 | 100 % |
 
-Caveats: the knowledge base is six short documents and the questions are hand-written, so this is a sanity check and not a production benchmark. One question passes by a thin margin (0.453 vs 0.45).
+Reading it honestly: with 59 documents, medical-sounding questions the knowledge base does not cover ("what causes high blood pressure", "symptoms of a heart attack") now score 0.47-0.49, just above the threshold, so 2 of 10 unrelated questions retrieve a loosely related passage. Raising the threshold to 0.50 rejects all of them but loses correct answers; 0.45 was kept because an irrelevant passage is mostly harmless (the model can ignore it) while a missed one loses information. The questions are hand-written by the author, so this is a regression guard, not a benchmark.
 
 **Chat agent** (`evals/agent_eval.py`): 14 questions through the live API, scored by rules: the right tool was chosen, the answer contains the expected facts, it contains no invented number, no diagnosis or dosage, and off-topic or "ignore your instructions" requests are refused. API errors (quota, outage) are reported as `ERROR` and are never counted as failures. Results are written to `evals/results/agent_<label>.json`.
 
-**Latest full run** (default model chain, 14 questions, no API errors): **13 / 14 passed (93 %)**. Exact calculations 2/2, knowledge retrieval 2/2, no invented values 1/1, off-topic and prompt-injection refusals 2/2, no diagnosis / no dosage 2/2, concise summary 1/1, tool choice and grounding 3/4. The one miss was a correct answer ("145 mg/dL, which is above the reference range") that my check rejected because it expected the word "high"; the check now also accepts "above" and "elevated" (this run has not been repeated). Rule-based checks on a small set are a regression guard, not proof of clinical safety.
+**Latest full run** (final stack: 59-document MedlinePlus knowledge base, default model chain, 14 questions, no API errors): **14 / 14 passed**. Exact calculations 2/2, knowledge retrieval 2/2, no invented values 1/1, off-topic and prompt-injection refusals 2/2, no diagnosis / no dosage 2/2, concise summary 1/1, tool choice and grounding 4/4. History, stated plainly: the first clean run scored 13/14; the one miss was a correct answer ("145 mg/dL, which is above the reference range") that my check rejected because it expected the word "high". I widened that check to accept "above" and "elevated", and the later full run passed every case. Because that check was changed after seeing a result, treat 13/14 as the unbiased figure and 14/14 as the current regression baseline. Rule-based checks on a small set are a regression guard, not proof of clinical safety.
 
 ## Gemini models and fallback
 
@@ -166,7 +166,7 @@ Errors are explicit: `400` not a PDF, `401` not logged in, `404` unknown or not 
 ## Known limitations (honest list)
 
 - **PDF layouts:** the parser understands "one test per line" and "one table cell per line" layouts. Reports with very different layouts, multi-column pages or scanned images (no OCR) are not supported yet and return a clear `422`.
-- **Knowledge base is small** (six short documents). The pipeline scales, but answers are only as good as the documents, which should be reviewed by a medical professional.
+- **Knowledge base is limited to lab-test pages** (53 MedlinePlus pages + 6 notes). Answers are only as good as these documents; conditions, drugs and non-lab topics are not covered, and a medical professional should review the content before any real use.
 - Reports are stored as local JSON files; there is no authentication or database yet.
 - Reference ranges come from the report itself and are not adjusted for age or sex.
 
