@@ -85,3 +85,38 @@ class ParserTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SyntheticReportRegressionTests(unittest.TestCase):
+    """Layouts found by the randomised report generator (evals/generate_reports.py)."""
+
+    def parse(self, text):
+        return {r["parameter"]: r for r in parse_report(text)}
+
+    def test_range_with_middle_dot_or_minus_sign(self):
+        for sep in ("·", "−", "–", "to"):
+            rows = parse_report(f"Hemoglobin 11.2 g/dL 13.5 {sep} 17.5 Low")
+            self.assertEqual(rows[0]["reference_range"], f"13.5 {sep} 17.5")
+            self.assertEqual(normalize_report(rows)[0]["reference_range"], {"min": 13.5, "max": 17.5})
+
+    def test_name_starting_with_digits(self):
+        rows = self.parse("25-OH Vitamin D   134 ng/mL   30 - 100")
+        self.assertIn("25-OH Vitamin D", rows)
+
+    def test_unit_with_digits_shares_line_with_range(self):
+        rows = self.parse("eGFR\n68\nmL/min/1.73m2 > 60")
+        self.assertEqual(rows["eGFR"]["value"], "68 mL/min/1.73m2")
+        self.assertEqual(rows["eGFR"]["reference_range"], "> 60")
+
+    def test_name_and_value_on_one_line_unit_below(self):
+        rows = self.parse("WHITE BLOOD CELL COUNT 10.2\nx10^3/uL\n4 - 11")
+        self.assertEqual(rows["WHITE BLOOD CELL COUNT"]["value"], "10.2 x10^3/uL")
+
+    def test_flag_glued_to_value_is_not_part_of_the_unit(self):
+        rows = self.parse("Glycated Hemoglobin (HbA1c) 3.5 L\n%\n4 - 5.6")
+        record = rows["Glycated Hemoglobin (HbA1c)"]
+        self.assertEqual(record["value"], "3.5 %")
+        self.assertEqual(record["status"], "Low")
+
+        rows = self.parse("eGFR\n47 L\nmL/min/1.73m2 > 60")
+        self.assertEqual(rows["eGFR"]["value"], "47 mL/min/1.73m2")

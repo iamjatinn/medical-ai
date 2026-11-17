@@ -17,3 +17,5 @@ backend/uploads/
 reports/
 
 vector_store/
+evals/synthetic/
+evals/synthetic_holdout/
