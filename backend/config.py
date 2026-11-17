@@ -12,7 +12,6 @@ BASE_DIR = Path(__file__).resolve().parent          # .../backend
 PROJECT_ROOT = BASE_DIR.parent                      # repository root
 
 UPLOAD_DIR = BASE_DIR / "uploads"
-REPORTS_DIR = BASE_DIR / "reports"
 
 KNOWLEDGE_FOLDER = PROJECT_ROOT / "data" / "medical_docs"
 

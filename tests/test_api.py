@@ -7,7 +7,11 @@ import helpers
 
 from fastapi.testclient import TestClient
 
+from sqlalchemy.orm import sessionmaker
+
+import database
 import main
+from models import db_models  # noqa: F401  (registers the tables)
 from routers import upload as upload_router
 from services import report_storage_service
 
@@ -18,17 +22,19 @@ class ApiTests(unittest.TestCase):
 
         self.client = TestClient(main.app)
 
-        # Keep test output away from the real folders.
+        # Keep test output away from the real folders and the real database.
         folder = tempfile.TemporaryDirectory()
         self.addCleanup(folder.cleanup)
 
-        self.reports = Path(folder.name) / "reports"
         self.uploads = Path(folder.name) / "uploads"
-        self.reports.mkdir()
         self.uploads.mkdir()
 
+        engine = database.make_engine(f"sqlite:///{Path(folder.name, 'test.db').as_posix()}")
+        database.Base.metadata.create_all(engine)
+        self.addCleanup(engine.dispose)   # runs before folder.cleanup (LIFO)
+
         for patcher in (
-            mock.patch.object(report_storage_service, "REPORTS_DIR", self.reports),
+            mock.patch.object(database, "SessionLocal", sessionmaker(bind=engine, expire_on_commit=False)),
             mock.patch.object(upload_router, "UPLOAD_DIR", self.uploads),
             # no Gemini / FAISS needed for these tests
             mock.patch("services.medical_report_service.explain_report", return_value="test summary"),
@@ -57,7 +63,9 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(len(result["findings"]), 6)
         self.assertEqual(result["ai_summary"], "test summary")
         self.assertEqual(list(self.uploads.iterdir()), [])  # temp copy removed
-        self.assertTrue((self.reports / f"{result['report_id']}.json").exists())
+        saved = report_storage_service.load_report(result["report_id"])   # really in the database
+        self.assertEqual(len(saved["findings"]), 6)
+        self.assertEqual(saved["findings"][0]["parameter"], "Hemoglobin")
 
     def test_path_in_filename_is_stripped(self):
 

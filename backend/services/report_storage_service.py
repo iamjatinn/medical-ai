@@ -1,78 +1,106 @@
-import json
-import os
-import threading
+"""Save and load reports and chat history in the database.
+
+Same functions and return shapes as the old JSON-file version, so the rest
+of the app did not have to change.
+"""
+
 import uuid
-from datetime import datetime
 
-from config import REPORTS_DIR
-
-REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-
-_lock = threading.Lock()
+import database
+from models.db_models import ChatMessage, Finding, Report
 
 
 class ReportNotFoundError(Exception):
     """Raised when a report id is malformed or no such report exists."""
 
 
-def _report_path(report_id: str):
-    """Build the path for a report id. The id must be a real UUID, which
-    also blocks path-traversal ids such as '../../secret'."""
+def _clean_id(report_id) -> str:
+    """The id must be a real UUID (this also rejects things like '../../x')."""
 
     try:
-        clean_id = str(uuid.UUID(str(report_id)))
+        return str(uuid.UUID(str(report_id)))
     except ValueError as error:
         raise ReportNotFoundError(report_id) from error
 
-    return REPORTS_DIR / f"{clean_id}.json"
 
+def _to_dict(report: Report) -> dict:
 
-def _write(path, report):
-    """Write atomically so a crash cannot leave a half-written JSON file."""
-
-    temp_path = path.with_suffix(".json.tmp")
-
-    with open(temp_path, "w", encoding="utf-8") as file:
-        json.dump(report, file, indent=4)
-
-    os.replace(temp_path, path)
+    return {
+        "report_id": report.id,
+        "filename": report.filename,
+        "created_at": report.created_at.isoformat(),
+        "findings": [
+            {
+                "parameter": f.parameter,
+                "value": f.value,
+                "unit": f.unit,
+                "reference_range": {"min": f.ref_min, "max": f.ref_max},
+                "reported_status": f.reported_status,
+                "calculated_status": f.calculated_status,
+                "status_match": f.status_match,
+            }
+            for f in report.findings
+        ],
+        "ai_summary": report.ai_summary,
+        "chat_history": [
+            {"role": m.role, "content": m.content} for m in report.messages
+        ],
+    }
 
 
 def save_report(filename, findings, ai_summary):
 
-    report = {
-        "report_id": str(uuid.uuid4()),
-        "filename": filename,
-        "created_at": datetime.now().isoformat(),
-        "findings": findings,
-        "ai_summary": ai_summary,
-        "chat_history": [],
-    }
+    report = Report(
+        id=str(uuid.uuid4()),
+        filename=filename[:255],
+        ai_summary=ai_summary,
+        findings=[
+            Finding(
+                position=position,
+                parameter=finding["parameter"],
+                value=finding["value"],
+                unit=finding.get("unit", ""),
+                ref_min=finding["reference_range"]["min"],
+                ref_max=finding["reference_range"]["max"],
+                reported_status=finding.get("reported_status"),
+                calculated_status=finding["calculated_status"],
+                status_match=finding.get("status_match"),
+            )
+            for position, finding in enumerate(findings)
+        ],
+    )
 
-    with _lock:
-        _write(_report_path(report["report_id"]), report)
-
-    return report
+    with database.SessionLocal() as session:
+        session.add(report)
+        session.commit()
+        session.refresh(report)
+        return _to_dict(report)
 
 
 def load_report(report_id):
 
-    path = _report_path(report_id)
+    with database.SessionLocal() as session:
 
-    try:
-        with open(path, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except FileNotFoundError as error:
-        raise ReportNotFoundError(report_id) from error
+        report = session.get(Report, _clean_id(report_id))
+
+        if report is None:
+            raise ReportNotFoundError(report_id)
+
+        return _to_dict(report)
 
 
 def save_chat(report_id, user_message, assistant_message):
 
-    with _lock:
+    report_id = _clean_id(report_id)
 
-        report = load_report(report_id)
+    with database.SessionLocal() as session:
 
-        report["chat_history"].append({"role": "user", "content": user_message})
-        report["chat_history"].append({"role": "assistant", "content": assistant_message})
+        if session.get(Report, report_id) is None:
+            raise ReportNotFoundError(report_id)
 
-        _write(_report_path(report_id), report)
+        session.add_all([
+            ChatMessage(report_id=report_id, role="user", content=user_message),
+            ChatMessage(report_id=report_id, role="assistant", content=assistant_message),
+        ])
+
+        session.commit()

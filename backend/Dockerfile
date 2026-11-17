@@ -9,9 +9,10 @@ WORKDIR /app
 
 # 1) Dependencies first, so Docker caches this slow layer until requirements.txt changes.
 #    CPU-only PyTorch keeps the image far smaller than the default (CUDA) build.
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+
 COPY backend/requirements.txt backend/requirements.txt
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu \
- && pip install -r backend/requirements.txt
+RUN pip install -r backend/requirements.txt
 
 # 2) Download the embedding model once at build time, so containers start fast
 #    and do not need internet access to huggingface.co.

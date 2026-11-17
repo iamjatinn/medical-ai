@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from database import init_db
 from routers.chat import router as chat_router
 from routers.upload import router as upload_router
 from services.rag_knowledge_service import get_rag
@@ -17,6 +18,8 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_db()                      # create the tables if they do not exist yet
+
     # Build / load the FAISS index once at startup (shared by every request).
     app.state.rag = get_rag()
     yield
