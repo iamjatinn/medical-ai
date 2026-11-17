@@ -120,3 +120,20 @@ class SyntheticReportRegressionTests(unittest.TestCase):
 
         rows = self.parse("eGFR\n47 L\nmL/min/1.73m2 > 60")
         self.assertEqual(rows["eGFR"]["value"], "47 mL/min/1.73m2")
+
+
+class FlagBeforeValueTests(unittest.TestCase):
+    """Found with a real CBC report: name, flag, value, unit, range - one per line."""
+
+    def test_flag_between_name_and_value(self):
+        text = (
+            "NEUTROPHILS\n79\n%\n40 - 80\n"
+            "LYMPHOCYTE\nL\n18\n%\n20 - 40\n"
+            "MEAN CELL HAEMOGLOBIN CON, MCHC\nH\n35.7\n%\n31.5 - 34.5\n"
+        )
+        rows = {r["parameter"]: r for r in parse_report(text)}
+        self.assertEqual(set(rows), {"NEUTROPHILS", "LYMPHOCYTE", "MEAN CELL HAEMOGLOBIN CON, MCHC"})
+        self.assertEqual(rows["LYMPHOCYTE"]["value"], "18 %")
+        self.assertEqual(rows["LYMPHOCYTE"]["status"], "Low")
+        self.assertEqual(rows["MEAN CELL HAEMOGLOBIN CON, MCHC"]["status"], "High")
+        self.assertEqual(rows["NEUTROPHILS"]["status"], "")

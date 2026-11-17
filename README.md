@@ -191,6 +191,7 @@ Every item below was a real failure found while building or testing, with what c
 | `WHITE BLOOD CELL COUNT 10.2` skipped | Name and value were on one line with the unit on the next | New `NAME_VALUE_RE` handles that layout |
 | Unit read as `L U/L` and `L mL/min/1.73m2` | A flag letter glued to the value (`27 L`, then `U/L` on the next line) was treated as part of the unit | New `VALUE_FLAG_RE` splits the flag off the value and uses it as the status |
 | Abnormal `TG`, `HCT`, `HDL-C`, `FBS`, `PLT`, `Hb`, `PCV` found no explanation page (coverage 95 %) | The knowledge pages use full names; the search query used the printed abbreviation | `expand_abbreviations` spells the abbreviation out in the query and keeps the original (`query_builder.py`). Coverage 100 % |
+| Real CBC PDF: `LYMPHOCYTE`, `MONOCYTES`, `MCHC` came out named just `L` / `H` (values and statuses were right) | The lab prints name, **flag**, value, unit, range one per line; the parser assumed the flag comes after the range, so it took the flag letter as the test name. My synthetic generator never put the flag before the value, so it could not catch this | `FLAG_ONLY_RE`: a lone flag line before the value is used as the status and the line above it as the name (`parser_service.py`), with a regression test. Found by uploading a real report, not by the synthetic eval |
 
 Lesson from this round: after tuning on one random seed the parser scored 100 %, but a fresh seed found three more misses. Always test on data you did not tune on.
 

@@ -81,6 +81,9 @@ NAME_VALUE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# a line that is only a flag: "L", "H", "High" ...
+FLAG_ONLY_RE = re.compile(rf"^(?:{STATUS})$", re.IGNORECASE)
+
 # "15.8 H": a value with the flag letter glued to it
 VALUE_FLAG_RE = re.compile(rf"^(?P<value>{NUMBER})\s+(?P<flag>{STATUS})\s*$", re.IGNORECASE)
 
@@ -158,7 +161,11 @@ def _cell_records(lines, skip):
             range_text = unit_range.group("range")
 
         elif VALUE_LINE_RE.match(value_line) and _is_label(before_value):
-            value, parameter = value_line, before_value
+            if FLAG_ONLY_RE.match(before_value) and _is_label(before_unit):
+                # name / flag / value-with-unit: the flag sits before the value
+                value, parameter, inline_flag = value_line, before_unit, before_value
+            else:
+                value, parameter = value_line, before_value
 
         elif UNIT_LINE_RE.match(value_line):
             # the unit is on its own line; the value is above it
@@ -167,6 +174,10 @@ def _cell_records(lines, skip):
 
             if VALUE_LINE_RE.match(before_value) and _is_label(before_unit):
                 value, parameter = f"{before_value} {value_line}", before_unit
+                earlier = lines[index - 4] if index >= 4 else ""
+                if FLAG_ONLY_RE.match(before_unit) and _is_label(earlier):
+                    # name / flag / value / unit: the flag sits before the value
+                    parameter, inline_flag = earlier, before_unit
                 if flagged:
                     value = f"{flagged.group('value')} {value_line}"
                     inline_flag = flagged.group("flag")
