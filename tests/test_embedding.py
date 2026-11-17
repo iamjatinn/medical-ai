@@ -14,7 +14,7 @@ class FakeSentenceTransformer:
 
 
 class FakeFastEmbed:
-    def embed(self, texts):
+    def embed(self, texts, batch_size=256):
         return (np.array([0.0, 6.0, 8.0]) for _ in texts)         # a generator, length 10
 
 
