@@ -7,7 +7,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile.prod
     dockerContext: .
-    plan: starter                   # the free plan has too little memory/CPU for FAISS + embeddings
+    plan: free                      # 512 MB RAM; sleeps after ~15 min idle (first request is slow). Use starter for always-on.
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL           # paste the Neon connection string (Render will not store it in git)

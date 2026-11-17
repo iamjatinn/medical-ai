@@ -33,7 +33,7 @@ You need accounts at three services (all have a free tier for the database and f
    | `JWT_SECRET` | generated for you |
 4. Wait for the deploy, then open `https://<your-service>.onrender.com/` → `{"message":"Medical AI Backend Running"}` and `/docs` for the API.
 
-**Memory:** the production image uses `fastembed` (ONNX) instead of PyTorch, so it fits a small instance. Render's free plan is too small and sleeps when idle; the `starter` plan in `render.yaml` is the minimum I'd use.
+**Memory and cost:** the production image uses `fastembed` (ONNX) instead of PyTorch and measured about 290 MB of RAM, so it is set to Render's **free** plan (512 MB). The free plan sleeps after ~15 minutes without traffic, so the first request after a pause takes 30-60 s, and the first start is slow because the search index is built then. For an always-on demo switch `plan: free` to `starter` in `render.yaml`. If the free plan runs out of memory, Hugging Face Spaces (Docker) is the free fallback.
 
 ## 3. Frontend (Vercel)
 1. **Add New → Project** → the repository → set **Root Directory** to `frontend`.
