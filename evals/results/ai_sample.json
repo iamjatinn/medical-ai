@@ -1,0 +1,66 @@
+[
+ {
+  "file": "report_045_grouped_cells.pdf",
+  "abnormal": 0,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "low",
+  "sources": 0
+ },
+ {
+  "file": "report_170_cells_status.pdf",
+  "abnormal": 1,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "mild",
+  "sources": 1
+ },
+ {
+  "file": "report_169_cells_status.pdf",
+  "abnormal": 4,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "moderate",
+  "sources": 5
+ },
+ {
+  "file": "report_096_grouped_cells.pdf",
+  "abnormal": 3,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "moderate",
+  "sources": 3
+ },
+ {
+  "file": "report_097_rows_flag_letter.pdf",
+  "abnormal": 2,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "moderate",
+  "sources": 2
+ },
+ {
+  "file": "report_019_rows_status.pdf",
+  "abnormal": 4,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "mild",
+  "sources": 6
+ },
+ {
+  "file": "report_016_rows_flag_letter.pdf",
+  "abnormal": 0,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "low",
+  "sources": 0
+ },
+ {
+  "file": "report_067_rows_status.pdf",
+  "abnormal": 1,
+  "verdict": "PASS",
+  "note": "",
+  "risk": "low",
+  "sources": 1
+ }
+]
