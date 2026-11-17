@@ -11,9 +11,7 @@ router = APIRouter()
 def chat(request: ChatRequest):
 
     try:
-        answer = ask_question(request.report_id, request.question.strip())
+        return ask_question(request.report_id, request.question.strip())
 
     except ReportNotFoundError:
         raise HTTPException(status_code=404, detail="Report not found.")
-
-    return {"answer": answer}

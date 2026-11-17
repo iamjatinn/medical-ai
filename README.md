@@ -69,6 +69,41 @@ npm run dev                   # http://localhost:5173
 backend\venv\Scripts\python -m unittest discover -s tests -v
 ```
 
+## Chat agent (tool use)
+
+`/chat` is a small agent. Gemini can call four tools instead of guessing, and the code runs them and returns exact results:
+
+| Tool | Used for |
+|---|---|
+| `get_report_findings` | "which results are abnormal?" |
+| `get_parameter_details` | value, unit, range and status of one test |
+| `compute_deviation` | exact "% below/above normal" (the model never does the arithmetic) |
+| `search_knowledge` | general medical information from the FAISS knowledge base |
+
+Design choices: the loop is written by hand (visible, limited to 5 steps); every tool is bound to one report, so the model can never read another report; tool errors are returned to the model instead of raised; if the agent fails, chat falls back to a single RAG prompt. The API returns `tools_used` for each answer.
+
+## Evaluation
+
+Run these after changing prompts, tools, chunking or the model.
+
+```powershell
+backend\venv\Scripts\python evals\retrieval_eval.py     # no API key needed
+backend\venv\Scripts\python evals\agent_eval.py         # needs the stack running and Gemini quota
+```
+
+**Retrieval** (`evals/retrieval_eval.py`): 24 questions with a known source document, plus 11 unrelated or out-of-knowledge questions that should return nothing.
+
+| Similarity threshold | hit@1 | hit@3 | MRR | unrelated questions correctly rejected |
+|---|---|---|---|---|
+| 0.25 | 1.00 | 1.00 | 1.00 | 82 % |
+| 0.35 | 1.00 | 1.00 | 1.00 | 91 % (a blood-pressure question scored 0.37) |
+| **0.45 (used)** | **1.00** | **1.00** | **1.00** | **100 %** |
+| 0.55 | 0.71 | 0.71 | 0.71 | 100 % |
+
+Caveats: the knowledge base is six short documents and the questions are hand-written, so this is a sanity check and not a production benchmark. One question passes by a thin margin (0.453 vs 0.45).
+
+**Chat agent** (`evals/agent_eval.py`): 14 questions through the live API, scored by rules: the right tool was chosen, the answer contains the expected facts, it contains no invented number, no diagnosis or dosage, and off-topic or "ignore your instructions" requests are refused. API errors (quota, outage) are reported as `ERROR` and are never counted as failures. Results are written to `evals/results/agent.json`; no pass rate is published here until a full clean run completes.
+
 ## API
 
 | Method | Path | Purpose |

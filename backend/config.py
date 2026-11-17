@@ -4,6 +4,7 @@ All filesystem paths are resolved from this file's location, so the app
 behaves the same no matter which directory it is started from.
 """
 
+import os
 from pathlib import Path
 
 # ---------------- Paths ---------------- #
@@ -23,7 +24,7 @@ INDEX_META_PATH = VECTOR_STORE_DIR / "meta.json"
 # ---------------- Models ---------------- #
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")   # override per environment
 
 # ---------------- RAG ---------------- #
 

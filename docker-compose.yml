@@ -27,6 +27,7 @@ services:
       - backend/.env              # holds GEMINI_API_KEY (never baked into the image)
     environment:
       CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+      GEMINI_MODEL: "${GEMINI_MODEL:-gemini-2.5-flash}"   # e.g. set to gemini-2.5-flash-lite if you hit quota limits
       # "db" is the service name above: containers reach each other by service name.
       DATABASE_URL: "postgresql+psycopg://medical:dev_password_change_me@db:5432/medical_ai"
     depends_on:

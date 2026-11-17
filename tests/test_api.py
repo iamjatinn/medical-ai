@@ -130,9 +130,10 @@ class ApiTests(unittest.TestCase):
 
         report = report_storage_service.save_report("r.pdf", [], "summary")
 
-        with mock.patch("services.chat_service.retrieve_knowledge", return_value=[]), \
-             mock.patch("services.chat_service.retrieve_for_question", return_value=[]), \
-             mock.patch("services.chat_service.generate_response", return_value="answer"):
+        with mock.patch(
+            "services.agent_service.run_agent",
+            return_value={"answer": "answer", "tools_used": ["search_knowledge"], "steps": 2},
+        ):
 
             response = self.client.post(
                 "/chat",
@@ -141,6 +142,7 @@ class ApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["answer"], "answer")
+        self.assertEqual(response.json()["tools_used"], ["search_knowledge"])
 
         saved = report_storage_service.load_report(report["report_id"])
 
