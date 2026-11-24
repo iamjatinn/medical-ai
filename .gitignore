@@ -19,3 +19,4 @@ reports/
 vector_store/
 evals/synthetic/
 evals/synthetic_holdout/
+evals/synthetic_v2/

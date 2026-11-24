@@ -12,6 +12,34 @@ def calculate_status(value, minimum, maximum):
     return "Normal"
 
 
+def calculate_status_for_limit(value, qualifier, minimum, maximum):
+    """Status of a result printed with a detection limit ('<0.5' or '>1000').
+
+    The true value is only known to be below (or above) the number, so a status
+    is given only when that is enough to decide. Otherwise None (not judged).
+    """
+
+    if qualifier == "<":
+        if minimum is not None and value <= minimum:
+            return "Low"
+        if maximum is not None and value > maximum:
+            return None
+        if minimum is None or minimum <= 0:
+            return "Normal"
+        return None
+
+    if qualifier == ">":
+        if maximum is not None and value >= maximum:
+            return "High"
+        if minimum is not None and value < minimum:
+            return None
+        if maximum is None:
+            return "Normal"
+        return None
+
+    return calculate_status(value, minimum, maximum)
+
+
 def analyze_report(report):
     """Compare every numeric result with its reference range.
 
@@ -34,7 +62,14 @@ def analyze_report(report):
         if minimum is None and maximum is None:
             continue
 
-        calculated_status = calculate_status(value, minimum, maximum)
+        qualifier = test.get("qualifier") or ""
+
+        if qualifier:
+            calculated_status = calculate_status_for_limit(value, qualifier, minimum, maximum)
+            if calculated_status is None:
+                continue
+        else:
+            calculated_status = calculate_status(value, minimum, maximum)
 
         reported_status = test.get("status") or None
 
@@ -52,6 +87,7 @@ def analyze_report(report):
             "reported_status": reported_status,
             "calculated_status": calculated_status,
             "status_match": status_match,
+            "qualifier": qualifier,
         })
 
     return findings

@@ -18,6 +18,7 @@ class Finding(BaseModel):
     reported_status: Optional[str] = None
     calculated_status: str
     status_match: Optional[bool] = None
+    qualifier: str = ""
 
 
 class ReportResult(BaseModel):

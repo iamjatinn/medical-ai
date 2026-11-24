@@ -2,7 +2,7 @@ import os
 
 from services.ai_service import explain_report
 from services.normalizer_service import normalize_report
-from services.parser_service import parse_report
+from services.parser_service import detect_sex, parse_report
 from services.pdf_service import extract_text_from_pdf
 from services.report_storage_service import save_report
 from services.rule_engine import analyze_report
@@ -23,7 +23,7 @@ def process_medical_report(file_path, original_filename=None, *, user_id):
     parsed_report = parse_report(text)
 
     # Step 3 - Normalize values
-    normalized_report = normalize_report(parsed_report)
+    normalized_report = normalize_report(parsed_report, detect_sex(text))
 
     # Step 4 - Analyze report
     findings = analyze_report(normalized_report)

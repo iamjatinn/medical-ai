@@ -27,10 +27,22 @@ NUMBER = r"\d[\d,]*(?:\.\d+)?"
 # and some labs write "to" or "~".
 RANGE_SEPARATORS = "-|–|—|−|‒|·|•|~|to"
 
-RANGE = (
-    rf"(?:{NUMBER}\s*(?:{RANGE_SEPARATORS})\s*{NUMBER}"
-    rf"|[<>≤≥]=?\s*{NUMBER})"
+# Ranges as printed by real labs:  13 - 17   (13 - 17)   < 200   Up to 5.6
+# and one range per sex:  M: 13.5 - 17.5  F: 12 - 15.5
+SEX_LABEL = r"(?:male|female|men|women|m|f)"
+
+PLAIN_RANGE = (
+    rf"(?:\(?\s*{NUMBER}\s*(?:{RANGE_SEPARATORS})\s*{NUMBER}\s*\)?"
+    rf"|[<>≤≥]=?\s*{NUMBER}"
+    rf"|(?:up\s*to|upto)\s*{NUMBER})"
 )
+
+SEX_RANGE = rf"{SEX_LABEL}\s*[:\-]?\s*{PLAIN_RANGE}\s+{SEX_LABEL}\s*[:\-]?\s*{PLAIN_RANGE}"
+
+RANGE = rf"(?:{SEX_RANGE}|{PLAIN_RANGE})"
+
+# a result printed with a detection limit: "<0.5"
+VALUE_NUMBER = rf"(?:[<>≤≥]=?\s*)?{NUMBER}"
 
 STATUS_WORDS = {
     "low": "Low",
@@ -55,7 +67,7 @@ HEADER_WORDS = {
 ROW_RE = re.compile(
     rf"""^
     (?P<parameter>(?:\d{{1,3}}-)?[A-Za-z][A-Za-z0-9 ()/%.,'\-]*?)
-    \s+(?P<value>{NUMBER})
+    \s+(?P<value>{VALUE_NUMBER})
     (?:\s*(?P<unit>[^\s\d][^\s]*))?
     \s+(?P<range>{RANGE})
     (?:\s+(?!(?:{STATUS})\s*$)(?P<unit2>[^\s\d][^\s]*))?
@@ -64,15 +76,17 @@ ROW_RE = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-RANGE_LINE_RE = re.compile(rf"^\s*{RANGE}(?:\s+[^\s\d]\S*)?\s*$")
+RANGE_LINE_RE = re.compile(rf"^\s*{RANGE}(?:\s+[^\s\d]\S*)?\s*$", re.IGNORECASE)
 
-VALUE_LINE_RE = re.compile(rf"^\s*{NUMBER}(?:\s*[^\s\d]\S*)?\s*$")
+VALUE_LINE_RE = re.compile(
+    rf"^\s*{VALUE_NUMBER}(?:\s*[^\s\d,.\-–—−‒·•~]\S*)?\s*$"
+)
 
 UNIT_LINE_RE = re.compile(r"^[^\s\d]\S{0,14}$")
 
 # "mL/min/1.73m2 > 60": the unit and the range share one line
 UNIT_RANGE_LINE_RE = re.compile(
-    rf"^(?P<unit>[^\s\d]\S{{0,19}})\s+(?P<range>{RANGE})\s*$"
+    rf"^(?P<unit>[^\s\d]\S{{0,19}})(?:\s+|(?=[<>≤≥]))(?P<range>{RANGE})\s*$", re.IGNORECASE
 )
 
 # "WHITE BLOOD CELL COUNT 10.2": the name and the value share one line
@@ -116,11 +130,19 @@ def _row_records(lines):
 
         value = f"{match.group('value')} {match.group('unit') or ''}".strip()
 
+        parameter = match.group("parameter").strip()
+        status = _clean_status(match.group("status"))
+
+        # "Lymphocyte   L 18 %   20 - 40": a flag letter before the value
+        flagged = re.match(r"^(?P<name>.+?)\s+(?P<flag>[LH])$", parameter)
+        if flagged and not status:
+            parameter, status = flagged.group("name"), _clean_status(flagged.group("flag"))
+
         records.append((index, index, {
-            "parameter": match.group("parameter").strip(),
+            "parameter": parameter,
             "value": value,
             "reference_range": match.group("range").strip(),
-            "status": _clean_status(match.group("status")),
+            "status": status,
         }))
 
     return records
@@ -204,6 +226,27 @@ def _cell_records(lines, skip):
         }))
 
     return records
+
+
+_SEX_PATTERNS = [
+    re.compile(r"\b(?:gender|sex)\s*[:\-]?\s*(male|female|m|f)\b", re.IGNORECASE),
+    re.compile(r"\bage\s*/\s*sex\s*[:\-]?\s*\d+\s*(?:yrs?|years?|y)?\s*/\s*(male|female|m|f)\b", re.IGNORECASE),
+    re.compile(r"\b\d+\s*(?:yrs?|years?|y)\s*/\s*(male|female|m|f)\b", re.IGNORECASE),
+]
+
+
+def detect_sex(text):
+    """'M' or 'F' from the patient details in the report text, or None.
+
+    Needed because many reports print a different reference range for each sex.
+    """
+
+    for pattern in _SEX_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            return "M" if match.group(1).lower().startswith("m") else "F"
+
+    return None
 
 
 def parse_report(text):

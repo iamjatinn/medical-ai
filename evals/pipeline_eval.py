@@ -33,7 +33,7 @@ logging.disable(logging.CRITICAL)
 
 from lab_catalogue import CATALOGUE  # noqa: E402
 from services.normalizer_service import normalize_report  # noqa: E402
-from services.parser_service import parse_report  # noqa: E402
+from services.parser_service import detect_sex, parse_report  # noqa: E402
 from services.pdf_service import extract_text_from_pdf  # noqa: E402
 from services.rule_engine import analyze_report  # noqa: E402
 
@@ -67,7 +67,7 @@ def run_pipeline(pdf_path):
     except ValueError as error:
         return "no_results", [], set(), str(error)
 
-    findings = analyze_report(normalize_report(rows))
+    findings = analyze_report(normalize_report(rows, detect_sex(text)))
 
     return "ok", findings, {norm_name(r["parameter"]) for r in rows}, ""
 

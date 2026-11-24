@@ -37,8 +37,13 @@ LAYOUTS = {
     "value_flag_inline": 8,    # "11.2 L": the flag is glued to the value
     "no_status": 8,            # no status column at all
     "two_columns": 6,          # two tests per text row, side by side
-    "scanned": 6,              # an image: no text to read (OCR is not supported)
+    "scanned": 6,              # an image: no text to read (the app falls back to the AI to read it)
+    "flag_before_cells": 8,    # name / FLAG / value / unit / range, one cell per line (real CBC report)
+    "rows_flag_before": 6,     # "Lymphocyte  L 18 %  20 - 40": the flag comes before the value
 }
+
+# how the reference range is printed
+RANGE_STYLES = {"plain": 50, "upto": 12, "parens": 8, "to_word": 8, "unit_in_range": 8, "sex_both": 14}
 
 LAB_NAMES = ["ABC Diagnostics", "CityCare Pathology Lab", "Sunrise Clinical Laboratory", "Apex Health Labs",
              "Metro Path Labs", "GreenLeaf Diagnostics"]
@@ -64,7 +69,7 @@ def number(x, decimals=None, thousands=False):
     return text
 
 
-def make_test(rng, key, sex, thousands, dash, spaced_less_than):
+def make_test(rng, key, sex, thousands, dash, spaced_less_than, range_style="plain", censor=False):
     """Pick the spelling, unit, range and a random value for one test."""
 
     spec = CATALOGUE[key]
@@ -115,10 +120,36 @@ def make_test(rng, key, sex, thousands, dash, spaced_less_than):
     else:
         range_text = ("> " if spaced_less_than else ">") + number(low_s, None, thousands)
 
+    value_text = number(value, decimals if decimals else 0, thousands)
+
+    # ---- range printing variants seen in real reports ----
+    both_sexes = (spec["range"].get("M") and spec["range"].get("F")
+                  and None not in spec["range"]["M"] and None not in spec["range"]["F"])
+    if range_style == "upto" and high_s is not None and low_s is None:
+        range_text = rng.choice(["Up to ", "Upto "]) + number(high_s, None, thousands)
+    elif range_style == "parens" and low_s is not None and high_s is not None:
+        range_text = f"({range_text})"
+    elif range_style == "to_word" and low_s is not None and high_s is not None:
+        range_text = f"{number(low_s, None, thousands)} to {number(high_s, None, thousands)}"
+    elif range_style == "unit_in_range" and low_s is not None and high_s is not None:
+        range_text = f"{range_text} {unit}"
+    elif range_style == "sex_both" and both_sexes:
+        (m_low, m_high), (f_low, f_high) = spec["range"]["M"], spec["range"]["F"]
+        label_m, label_f = rng.choice([("M", "F"), ("Male", "Female")])
+        range_text = (f"{label_m}: {number(m_low * scale)}{dash}{number(m_high * scale)} "
+                      f"{label_f}: {number(f_low * scale)}{dash}{number(f_high * scale)}")
+
+    # ---- a result below the detection limit, printed "<0.5" ----
+    if censor and high_s is not None and low_s is None and status == "Normal":
+        shown = round(high_s * rng.uniform(0.04, 0.25), decimals + 1)
+        if shown > 0:
+            value = shown
+            value_text = "<" + number(shown, None, False)
+
     return {
         "key": key, "printed_name": name, "value": value, "unit": unit,
         "min": low_s, "max": high_s, "expected_status": status,
-        "value_text": number(value, decimals if decimals else 0, thousands),
+        "value_text": value_text,
         "range_text": range_text, "panel": spec["panel"],
     }
 
@@ -180,17 +211,26 @@ def draw_header(writer, rng, sex, age):
     writer.line(rng.choice(LAB_NAMES), bold=True, size=14, gap=20)
     writer.line("Complete Laboratory Report", size=11, gap=18)
     writer.line(f"Patient Name: {rng.choice(PATIENTS)}")
-    writer.line(f"Age: {age}")
-    writer.line(f"Gender: {'Male' if sex == 'M' else 'Female'}")
+    style = rng.choice(["separate", "sex_word", "age_sex"])
+    if style == "separate":
+        writer.line(f"Age: {age}")
+        writer.line(f"Gender: {'Male' if sex == 'M' else 'Female'}")
+    elif style == "sex_word":
+        writer.line(f"Age: {age} Years    Sex: {'M' if sex == 'M' else 'F'}")
+    else:
+        writer.line(f"Age / Sex : {age} YRS / {sex}")
     writer.line(f"Sample ID: LAB-{rng.randint(10000, 99999)}")
     writer.gap(10)
 
 
-def render(rng, layout, tests, sex, age, upper):
+def render(rng, layout, tests, sex, age, upper, wide_range=False):
     """Draw one report and return the PDF document."""
 
     writer = Writer()
     draw_header(writer, rng, sex, age)
+
+    # a two-sex range ("Male: 13.5-17.5 Female: 12-15.5") is wide: move the last column right
+    x_status = 540 if wide_range else X_STATUS
 
     shown = [dict(t, printed_name=t["printed_name"].upper() if upper else t["printed_name"]) for t in tests]
 
@@ -199,7 +239,7 @@ def render(rng, layout, tests, sex, age, upper):
 
     # ---- table headers and rows per layout ----
     if layout in ("cells_status", "grouped_cells"):
-        writer.header_cells = [(X_NAME, "Test"), (X_VALUE, "Result"), (X_RANGE, "Reference Range"), (X_STATUS, "Status")]
+        writer.header_cells = [(X_NAME, "Test"), (X_VALUE, "Result"), (X_RANGE, "Reference Range"), (x_status, "Status")]
         writer.cells(writer.header_cells, bold=True)
 
         last_panel = None
@@ -209,15 +249,15 @@ def render(rng, layout, tests, sex, age, upper):
                 writer.line(PANEL_TITLES[t["panel"]], bold=True, size=10)
                 last_panel = t["panel"]
             writer.cells([(X_NAME, t["printed_name"]), (X_VALUE, f"{t['value_text']} {t['unit']}"),
-                          (X_RANGE, t["range_text"]), (X_STATUS, flag_word(t["expected_status"]))])
+                          (X_RANGE, t["range_text"]), (x_status, flag_word(t["expected_status"]))])
 
     elif layout == "cells_unit_flag":
         writer.header_cells = [(X_NAME, "Test"), (X_VALUE - 40, "Result"), (X_UNIT, "Unit"),
-                               (X_RANGE, "Reference Range"), (X_STATUS, "Flag")]
+                               (X_RANGE, "Reference Range"), (x_status, "Flag")]
         writer.cells(writer.header_cells, bold=True)
         for t in shown:
             writer.cells([(X_NAME, t["printed_name"]), (X_VALUE - 40, t["value_text"]), (X_UNIT, t["unit"]),
-                          (X_RANGE, t["range_text"]), (X_STATUS, flag_letter(t["expected_status"]))])
+                          (X_RANGE, t["range_text"]), (x_status, flag_letter(t["expected_status"]))])
         writer.gap(6)
         writer.line("H = High, L = Low", size=8)
 
@@ -228,6 +268,21 @@ def render(rng, layout, tests, sex, age, upper):
             flagged = f"{t['value_text']} {flag_letter(t['expected_status'])}".strip()
             writer.cells([(X_NAME, t["printed_name"]), (X_VALUE - 40, flagged), (X_UNIT, t["unit"]),
                           (X_RANGE, t["range_text"])])
+
+    elif layout == "flag_before_cells":
+        X_FLAG, XV, XU, XR = 215, 245, 320, 385
+        writer.header_cells = [(X_NAME, "TEST"), (XV, "VALUE"), (XU, "UNIT"), (XR, "REFERENCE")]
+        writer.cells(writer.header_cells, bold=True)
+        for t in shown:
+            writer.cells([(X_NAME, t["printed_name"]), (X_FLAG, flag_letter(t["expected_status"])),
+                          (XV, t["value_text"]), (XU, t["unit"]), (XR, t["range_text"])])
+
+    elif layout == "rows_flag_before":
+        writer.line("Test   Flag   Result   Reference Range", bold=True)
+        for t in shown:
+            flag = flag_letter(t["expected_status"])
+            result = f"{flag} {t['value_text']} {t['unit']}".strip()
+            writer.line(f"{t['printed_name']}   {result}   {t['range_text']}")
 
     elif layout == "no_status":
         writer.header_cells = [(X_NAME, "Test"), (X_VALUE, "Result"), (X_RANGE, "Reference Range")]
@@ -300,9 +355,14 @@ def generate_one(rng, index):
     keys = rng.sample(keys, min(len(keys), rng.randint(5, 16))) if len(keys) > 5 else keys
     keys.sort(key=lambda k: (CATALOGUE[k]["panel"], k))
 
-    tests = [make_test(rng, k, sex, thousands, dash, spaced_less_than) for k in keys]
+    range_style = rng.choices(list(RANGE_STYLES), weights=list(RANGE_STYLES.values()))[0]
+    censor_report = rng.random() < 0.3
+    if range_style == "sex_both" and layout == "two_columns":
+        range_style = "plain"        # the two side-by-side columns have no room for two ranges
+    tests = [make_test(rng, k, sex, thousands, dash, spaced_less_than, range_style,
+                       censor_report and rng.random() < 0.5) for k in keys]
 
-    doc = render(rng, layout, tests, sex, age, upper)
+    doc = render(rng, layout, tests, sex, age, upper, wide_range=(range_style == "sex_both"))
 
     return layout, sex, tests, doc
 

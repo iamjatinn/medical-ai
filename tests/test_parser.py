@@ -137,3 +137,59 @@ class FlagBeforeValueTests(unittest.TestCase):
         self.assertEqual(rows["LYMPHOCYTE"]["status"], "Low")
         self.assertEqual(rows["MEAN CELL HAEMOGLOBIN CON, MCHC"]["status"], "High")
         self.assertEqual(rows["NEUTROPHILS"]["status"], "")
+
+
+class RealWorldVariantTests(unittest.TestCase):
+    """Range, value and flag styles found by the second synthetic batch."""
+
+    def analyse(self, text):
+        from services.parser_service import detect_sex
+
+        rows = parse_report(text)
+        return {f["parameter"]: f for f in analyze_report(normalize_report(rows, detect_sex(text)))}
+
+    def test_up_to_and_bracketed_ranges(self):
+        found = self.analyse("LDL 130 mg/dL Up to 100\nGlucose 90 mg/dL (70 - 99)")
+        self.assertEqual(found["LDL"]["reference_range"], {"min": None, "max": 100.0})
+        self.assertEqual(found["LDL"]["calculated_status"], "High")
+        self.assertEqual(found["Glucose"]["calculated_status"], "Normal")
+
+    def test_sex_specific_range_uses_the_patient_sex(self):
+        report = "Age / Sex : 27 YRS / {sex}\nHemoglobin 13.0 g/dL M: 13.5 - 17.5 F: 12 - 15.5"
+        self.assertEqual(self.analyse(report.format(sex="M"))["Hemoglobin"]["calculated_status"], "Low")
+        self.assertEqual(self.analyse(report.format(sex="F"))["Hemoglobin"]["calculated_status"], "Normal")
+
+    def test_unknown_sex_uses_the_widest_range(self):
+        found = self.analyse("Hemoglobin 13.0 g/dL Male: 13.5-17.5 Female: 12-15.5")
+        self.assertEqual(found["Hemoglobin"]["reference_range"], {"min": 12.0, "max": 17.5})
+
+    def test_sex_is_detected_in_common_headers(self):
+        from services.parser_service import detect_sex
+
+        self.assertEqual(detect_sex("Gender: Female"), "F")
+        self.assertEqual(detect_sex("Age: 30 Years    Sex: M"), "M")
+        self.assertEqual(detect_sex("Age / Sex : 27 YRS / M"), "M")
+        self.assertIsNone(detect_sex("no patient details"))
+
+    def test_value_below_detection_limit(self):
+        found = self.analyse("CRP <0.5 mg/L < 5")
+        self.assertEqual(found["CRP"]["calculated_status"], "Normal")
+        self.assertEqual(found["CRP"]["qualifier"], "<")
+
+    def test_undecidable_limit_values_are_not_judged(self):
+        # "<10" against a minimum of 12: the true value could be anywhere below 10... that IS low
+        self.assertEqual(self.analyse("Ferritin <10 ng/mL 12 - 300")["Ferritin"]["calculated_status"], "Low")
+        # "<50" against 12-300: could be low or normal, so it is not judged
+        self.assertNotIn("Ferritin", self.analyse("Ferritin <50 ng/mL 12 - 300"))
+
+    def test_flag_before_value_on_one_row(self):
+        found = self.analyse("Lymphocyte   L 18 %   20 - 40")
+        self.assertIn("Lymphocyte", found)
+        self.assertEqual(found["Lymphocyte"]["reported_status"], "Low")
+
+    def test_printed_range_is_not_mistaken_for_a_value(self):
+        text = "WBC Count\n3,339 L\ncells/cumm\n4,000-11,000\nCRP\n<0.57\nmg/L\n< 5"
+        self.assertEqual(set(self.analyse(text)), {"WBC Count", "CRP"})
+
+    def test_unit_glued_to_range(self):
+        self.assertIn("eGFR", self.analyse("eGFR\n85\nmL/min/1.73m2>60"))
