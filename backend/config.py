@@ -51,6 +51,11 @@ CHUNK_OVERLAP = 50        # characters shared between neighbouring chunks
 
 MAX_UPLOAD_MB = 10
 
+# When a report has no readable text (a scan or a photo) or an unknown layout, the AI
+# copies the results from the image. Set AI_EXTRACTION=0 to turn this off.
+AI_EXTRACTION_ENABLED = os.getenv("AI_EXTRACTION", "1") != "0"
+MAX_EXTRACTED_TESTS = 200
+
 # ---------------- Authentication ---------------- #
 
 APP_ENV = os.getenv("APP_ENV", "development")           # set to "production" when deployed

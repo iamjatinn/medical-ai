@@ -1,0 +1,10 @@
+{
+ "tests": 68,
+ "found": 68,
+ "right": 67,
+ "status_ok": 68,
+ "extras": 0,
+ "errors": 1,
+ "reports": 9,
+ "perfect": 8
+}

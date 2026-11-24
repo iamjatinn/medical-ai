@@ -29,6 +29,8 @@ class ApiTests(unittest.TestCase):
 
         for patcher in (
             mock.patch.object(upload_router, "UPLOAD_DIR", self.uploads),
+            # the AI reader is off in these tests (it would call the real API)
+            mock.patch("services.medical_report_service.extract_with_ai", side_effect=RuntimeError("off")),
             # no Gemini / FAISS needed for these tests
             mock.patch(
                 "services.medical_report_service.explain_report",
@@ -141,3 +143,85 @@ class ApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AiReadingTests(ApiTests):
+    """Scans and photos are read by the AI (mocked here) and then judged by the rules."""
+
+    PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 50
+
+    def extracted(self):
+        from services.vision_service import ExtractedReport, ExtractedTest
+
+        return ExtractedReport(patient_sex="F", tests=[
+            ExtractedTest(name="Hemoglobin", value="11.2", unit="g/dL", reference_range="M: 13.5-17.5 F: 12-15.5", flag="L"),
+            ExtractedTest(name="Glucose", value="90", unit="mg/dL", reference_range="70 - 99"),
+            ExtractedTest(name="", value="5"),                       # no name: dropped
+        ])
+
+    def run_with_ai(self, content, name, content_type):
+        with mock.patch("services.vision_service.generate_structured", return_value=(self.extracted(), None)), \
+             mock.patch("services.medical_report_service.extract_with_ai",
+                        wraps=__import__("services.vision_service", fromlist=["x"]).extract_with_ai):
+            return self.upload(content, name, content_type)
+
+    def test_png_is_read_by_the_ai_and_judged_by_the_rules(self):
+        response = self.run_with_ai(self.PNG, "photo.png", "image/png")
+
+        self.assertEqual(response.status_code, 200)
+        result = response.json()["result"]
+        findings = {f["parameter"]: f for f in result["findings"]}
+        self.assertEqual(set(findings), {"Hemoglobin", "Glucose"})
+        self.assertEqual(findings["Hemoglobin"]["calculated_status"], "Low")      # female range used
+        self.assertEqual(findings["Glucose"]["calculated_status"], "Normal")
+        self.assertIn("Read from an image by AI", result["ai_summary"])
+        self.assertEqual(list(self.uploads.iterdir()), [])
+
+    def test_note_names_tests_whose_printed_flag_disagrees(self):
+        from services.vision_service import ExtractedReport, ExtractedTest
+
+        wrong = ExtractedReport(tests=[ExtractedTest(name="Glucose", value="90", unit="mg/dL",
+                                                     reference_range="70 - 99", flag="H")])
+        with mock.patch("services.vision_service.generate_structured", return_value=(wrong, None)),              mock.patch("services.medical_report_service.extract_with_ai",
+                        wraps=__import__("services.vision_service", fromlist=["x"]).extract_with_ai):
+            response = self.upload(self.PNG, "photo.png", "image/png")
+
+        summary = response.json()["result"]["ai_summary"]
+        self.assertIn("disagrees with the calculated status for: Glucose", summary)
+
+    def test_scanned_pdf_falls_back_to_the_ai(self):
+        import pymupdf
+
+        document = pymupdf.open()
+        document.new_page()                                          # a page with no text at all
+        response = self.run_with_ai(document.tobytes(), "scan.pdf", "application/pdf")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Read from an image by AI", response.json()["result"]["ai_summary"])
+
+    def test_text_pdf_never_uses_the_ai(self):
+        with mock.patch("services.medical_report_service.extract_with_ai", side_effect=AssertionError("AI used")):
+            response = self.upload(helpers.SAMPLE_PDF.read_bytes())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Read from an image by AI", response.json()["result"]["ai_summary"])
+
+    def test_ai_unavailable_gives_the_original_clear_message(self):
+        import pymupdf
+
+        document = pymupdf.open()
+        document.new_page().insert_text((72, 72), "Dear patient, see you soon.")
+        response = self.upload(document.tobytes())                   # extract_with_ai is mocked off in setUp
+
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("No laboratory results", response.json()["detail"])
+
+    def test_fake_image_is_rejected_by_magic_bytes(self):
+        self.assertEqual(self.upload(b"not a png at all", "x.png", "image/png").status_code, 400)
+
+    def test_ai_extraction_can_be_switched_off(self):
+        with mock.patch("services.medical_report_service.AI_EXTRACTION_ENABLED", False), \
+             mock.patch("services.medical_report_service.extract_with_ai", side_effect=AssertionError("AI used")):
+            response = self.upload(self.PNG, "photo.png", "image/png")
+
+        self.assertEqual(response.status_code, 422)

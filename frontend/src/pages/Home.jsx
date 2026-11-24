@@ -38,8 +38,8 @@ export const Home = () => {
     setError(null);
     if (!file) return;
 
-    if (file.type !== "application/pdf" && !file.name.endsWith(".pdf")) {
-      setError("Please upload a valid PDF laboratory report file.");
+    if (!/\.(pdf|png|jpe?g)$/i.test(file.name)) {
+      setError("Please upload a PDF, PNG or JPG of your laboratory report.");
       return;
     }
 
@@ -143,7 +143,7 @@ export const Home = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,application/pdf"
+              accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
               onChange={handleFileChange}
               className="hidden"
               id="pdf-upload-input"

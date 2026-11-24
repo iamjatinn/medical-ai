@@ -1,6 +1,7 @@
 import logging
 import re
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
@@ -19,6 +20,15 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 CHUNK_BYTES = 1024 * 1024
+
+
+# file type -> (content type, first bytes). PDFs are read as text; scans and photos by the AI.
+ALLOWED_FILES = {
+    ".pdf": ("application/pdf", b"%PDF-"),
+    ".png": ("image/png", b"\x89PNG"),
+    ".jpg": ("image/jpeg", b"\xff\xd8\xff"),
+    ".jpeg": ("image/jpeg", b"\xff\xd8\xff"),
+}
 
 
 def _display_name(filename: str | None) -> str:
@@ -43,12 +53,15 @@ def upload_report(file: UploadFile = File(...), user: CurrentUser = Depends(get_
 
     logger.info("Received file: %s", display_name)
 
-    if file.content_type != "application/pdf" or not display_name.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+    extension = Path(display_name.lower()).suffix
+    allowed = ALLOWED_FILES.get(extension)
+
+    if allowed is None or file.content_type != allowed[0]:
+        raise HTTPException(status_code=400, detail="Only PDF, PNG or JPG files are allowed.")
 
     # The client-supplied name is never used on disk: a random name rules out
     # overwriting files or writing outside the uploads folder.
-    saved_path = UPLOAD_DIR / f"{uuid.uuid4().hex}.pdf"
+    saved_path = UPLOAD_DIR / f"{uuid.uuid4().hex}{extension}"
 
     try:
 
@@ -58,10 +71,10 @@ def upload_report(file: UploadFile = File(...), user: CurrentUser = Depends(get_
 
             while chunk := file.file.read(CHUNK_BYTES):
 
-                if size == 0 and not chunk.startswith(b"%PDF-"):
+                if size == 0 and not chunk.startswith(allowed[1]):
                     raise HTTPException(
                         status_code=400,
-                        detail="The file is not a valid PDF.",
+                        detail="The file is not a valid PDF, PNG or JPG.",
                     )
 
                 size += len(chunk)
