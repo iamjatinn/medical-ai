@@ -149,12 +149,20 @@ def _row_records(lines):
 
 
 def _cell_records(lines, skip):
+    """Cell layout: the reference-range line is the anchor, the lines above it are the
+    value, the unit and the test name (a flag letter may sit between name and value).
+
+    Lines already used by a record can not start another one. Without this, a result
+    printed with a detection limit ("<23.2", which looks like a range) would be taken
+    for the anchor of the test above it.
+    """
 
     records = []
+    used = set()
 
     for index, line in enumerate(lines):
 
-        if index in skip:
+        if index in skip or index in used:
             continue
 
         unit_range = UNIT_RANGE_LINE_RE.match(line)
@@ -165,9 +173,11 @@ def _cell_records(lines, skip):
         value_line = lines[index - 1] if index >= 1 else ""
         before_value = lines[index - 2] if index >= 2 else ""
         before_unit = lines[index - 3] if index >= 3 else ""
+        earlier = lines[index - 4] if index >= 4 else ""
 
         range_text = line.strip()
         inline_flag = ""
+        first = index                      # the first line this record uses
 
         if unit_range:
             # value / "unit range" / status
@@ -179,15 +189,17 @@ def _cell_records(lines, skip):
                 inline_flag = flagged.group("flag")
             else:
                 value = f"{value_line} {unit_range.group('unit')}"
-            parameter = before_value
+            parameter, first = before_value, index - 2
+            if FLAG_ONLY_RE.match(before_value) and _is_label(before_unit):
+                # name / flag / value / "unit range": the flag sits before the value
+                parameter, inline_flag, first = before_unit, before_value, index - 3
             range_text = unit_range.group("range")
 
         elif VALUE_LINE_RE.match(value_line) and _is_label(before_value):
+            value, parameter, first = value_line, before_value, index - 2
             if FLAG_ONLY_RE.match(before_value) and _is_label(before_unit):
                 # name / flag / value-with-unit: the flag sits before the value
-                value, parameter, inline_flag = value_line, before_unit, before_value
-            else:
-                value, parameter = value_line, before_value
+                parameter, inline_flag, first = before_unit, before_value, index - 3
 
         elif UNIT_LINE_RE.match(value_line):
             # the unit is on its own line; the value is above it
@@ -195,11 +207,10 @@ def _cell_records(lines, skip):
             named = NAME_VALUE_RE.match(before_value)
 
             if VALUE_LINE_RE.match(before_value) and _is_label(before_unit):
-                value, parameter = f"{before_value} {value_line}", before_unit
-                earlier = lines[index - 4] if index >= 4 else ""
+                value, parameter, first = f"{before_value} {value_line}", before_unit, index - 3
                 if FLAG_ONLY_RE.match(before_unit) and _is_label(earlier):
                     # name / flag / value / unit: the flag sits before the value
-                    parameter, inline_flag = earlier, before_unit
+                    parameter, inline_flag, first = earlier, before_unit, index - 4
                 if flagged:
                     value = f"{flagged.group('value')} {value_line}"
                     inline_flag = flagged.group("flag")
@@ -207,7 +218,7 @@ def _cell_records(lines, skip):
             elif named:
                 # "WHITE BLOOD CELL COUNT 10.2" / "x10^3/uL" / range
                 value = f"{named.group('value')} {value_line}"
-                parameter = named.group("name")
+                parameter, first = named.group("name"), index - 2
                 inline_flag = named.group("flag") or ""
 
             else:
@@ -216,13 +227,21 @@ def _cell_records(lines, skip):
         else:
             continue
 
+        if first < 0 or any(position in used for position in range(first, index + 1)):
+            continue
+
         next_line = lines[index + 1] if index + 1 < len(lines) else ""
+        next_status = _clean_status(next_line)
+
+        used.update(range(first, index + 1))
+        if next_status:
+            used.add(index + 1)
 
         records.append((index, index, {
             "parameter": parameter.strip(),
             "value": value.strip(),
             "reference_range": range_text,
-            "status": _clean_status(next_line) or _clean_status(inline_flag),
+            "status": next_status or _clean_status(inline_flag),
         }))
 
     return records

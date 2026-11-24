@@ -1,8 +1,8 @@
 {
   "embedding_backend": "sentence-transformers",
-  "date": "2026-11-18T00:58:53",
-  "chunks": 724,
-  "documents": 59,
+  "date": "2026-11-24T21:46:57",
+  "chunks": 1645,
+  "documents": 119,
   "top_k": 3,
   "threshold": 0.45,
   "questions": 50,
@@ -47,7 +47,7 @@
       "hit@1": 0.95,
       "hit@3": 0.95,
       "mrr": 0.95,
-      "abstain_rate": 1.0
+      "abstain_rate": 0.9
     },
     "0.55": {
       "hit@1": 0.85,
@@ -84,12 +84,12 @@
           0.696
         ],
         [
-          "mplus_hemoglobin_test",
-          0.673
+          "anemia",
+          0.683
         ],
         [
           "rbc",
-          0.67
+          0.675
         ]
       ]
     },
@@ -111,7 +111,7 @@
       "retrieved": [
         [
           "anemia",
-          0.546
+          0.521
         ],
         [
           "mplus_iron_tests",
@@ -171,7 +171,7 @@
       "retrieved": [
         [
           "anemia",
-          0.746
+          0.734
         ],
         [
           "mplus_ferritin_blood_test",
@@ -195,7 +195,7 @@
       "retrieved": [
         [
           "diabetes",
-          0.768
+          0.765
         ],
         [
           "mplus_blood_glucose_test",
@@ -223,7 +223,7 @@
         ],
         [
           "diabetes",
-          0.465
+          0.462
         ],
         [
           "mplus_diabetes_tests",
@@ -267,7 +267,7 @@
       "retrieved": [
         [
           "diabetes",
-          0.539
+          0.502
         ],
         [
           "mplus_diabetes_tests",
@@ -289,7 +289,7 @@
       "retrieved": [
         [
           "vitamin_d",
-          0.749
+          0.743
         ],
         [
           "mplus_vitamin_d_test",
@@ -315,7 +315,7 @@
         ],
         [
           "vitamin_d",
-          0.527
+          0.528
         ],
         [
           "mplus_vitamin_d_test",
@@ -355,7 +355,7 @@
       "retrieved": [
         [
           "vitamin_d",
-          0.802
+          0.781
         ],
         [
           "mplus_vitamin_d_test",
@@ -382,7 +382,7 @@
         ],
         [
           "wbc",
-          0.715
+          0.74
         ],
         [
           "mplus_blood_differential",
@@ -405,7 +405,7 @@
         ],
         [
           "wbc",
-          0.805
+          0.783
         ],
         [
           "mplus_white_blood_count_wbc",
@@ -432,7 +432,7 @@
         ],
         [
           "wbc",
-          0.67
+          0.687
         ]
       ]
     },
@@ -476,7 +476,7 @@
       "retrieved": [
         [
           "rbc",
-          0.816
+          0.851
         ],
         [
           "mplus_red_blood_cell_rbc_count",
@@ -512,8 +512,8 @@
           0.651
         ],
         [
-          "rbc",
-          0.647
+          "mplus_red_blood_cell_rbc_indices",
+          0.646
         ]
       ]
     },
@@ -571,7 +571,7 @@
         ],
         [
           "rbc",
-          0.595
+          0.605
         ]
       ]
     },
@@ -586,7 +586,7 @@
       "retrieved": [
         [
           "platelets",
-          0.603
+          0.594
         ],
         [
           "mplus_platelet_tests",
@@ -609,7 +609,7 @@
       "retrieved": [
         [
           "platelets",
-          0.811
+          0.818
         ],
         [
           "mplus_platelet_tests",
@@ -636,7 +636,7 @@
         ],
         [
           "platelets",
-          0.507
+          0.509
         ],
         [
           "mplus_platelet_tests",
@@ -655,7 +655,7 @@
       "retrieved": [
         [
           "platelets",
-          0.657
+          0.654
         ],
         [
           "mplus_platelet_tests",
@@ -828,8 +828,8 @@
           0.666
         ],
         [
-          "mplus_cholesterol_levels",
-          0.652
+          "mplus_lipoprotein_a_blood_test",
+          0.664
         ]
       ]
     },
@@ -1003,16 +1003,16 @@
       "query": "what is the capital of France",
       "retrieved": [
         [
-          "mplus_triglycerides_test",
-          0.129
+          "mplus_follicle_stimulating_hormone_fsh_levels_test",
+          0.158
         ],
         [
-          "mplus_cholesterol_levels",
-          0.127
+          "mplus_lactate_test",
+          0.143
         ],
         [
-          "mplus_electrolyte_panel",
-          0.124
+          "mplus_carbon_dioxide_co2_in_blood",
+          0.141
         ]
       ]
     },
@@ -1020,16 +1020,16 @@
       "query": "how do I bake a chocolate cake",
       "retrieved": [
         [
-          "mplus_bun_blood_urea_nitrogen",
-          0.165
+          "mplus_ketones_in_urine",
+          0.194
         ],
         [
-          "mplus_hemoglobin_a1c_hba1c_test",
-          0.156
+          "mplus_natriuretic_peptide_tests_bnp_nt_probnp",
+          0.19
         ],
         [
-          "mplus_hemoglobin_a1c_hba1c_test",
-          0.145
+          "mplus_bilirubin_in_urine",
+          0.187
         ]
       ]
     },
@@ -1037,16 +1037,16 @@
       "query": "which programming language should I learn first",
       "retrieved": [
         [
+          "mplus_bacteria_culture_test",
+          0.101
+        ],
+        [
           "mplus_what_you_need_to_know_about_blood_testing",
           0.094
         ],
         [
-          "mplus_heart_disease_risk_assessment",
-          0.083
-        ],
-        [
-          "mplus_blood_glucose_test",
-          0.081
+          "mplus_bacteria_culture_test",
+          0.086
         ]
       ]
     },
@@ -1105,16 +1105,16 @@
       "query": "symptoms of a heart attack",
       "retrieved": [
         [
+          "mplus_troponin_test",
+          0.502
+        ],
+        [
+          "mplus_troponin_test",
+          0.493
+        ],
+        [
           "mplus_heart_disease_risk_assessment",
           0.473
-        ],
-        [
-          "mplus_homocysteine_test",
-          0.395
-        ],
-        [
-          "mplus_platelet_tests",
-          0.376
         ]
       ]
     },
@@ -1122,16 +1122,16 @@
       "query": "how is a broken arm treated",
       "retrieved": [
         [
-          "mplus_c_reactive_protein_crp_test",
-          0.256
+          "mplus_creatine_kinase_test",
+          0.324
         ],
         [
-          "mplus_white_blood_count_wbc",
-          0.25
+          "mplus_lactate_dehydrogenase_ldh_test",
+          0.295
         ],
         [
-          "mplus_vitamin_d_test",
-          0.238
+          "mplus_lactate_test",
+          0.269
         ]
       ]
     },
@@ -1156,16 +1156,16 @@
       "query": "side effects of ibuprofen",
       "retrieved": [
         [
+          "mplus_dhea_sulfate_test",
+          0.345
+        ],
+        [
           "mplus_magnesium_blood_test",
           0.333
         ],
         [
-          "mplus_platelet_tests",
-          0.316
-        ],
-        [
-          "mplus_liver_function_tests",
-          0.307
+          "mplus_helicobacter_pylori_h_pylori_tests",
+          0.328
         ]
       ]
     }

@@ -1,6 +1,6 @@
 # Medical AI – Lab Report Analyzer
 
-Upload a text-based lab report (PDF) and get:
+Upload a lab report (a text PDF, or a scan / photo as PDF, PNG or JPG) and get:
 
 - every test checked against its reference range (rule-based, no AI guessing),
 - a plain-language AI explanation grounded in a medical knowledge base (**RAG**),
@@ -33,7 +33,7 @@ knowledge instead of relying on memory.
 
 ### The RAG part
 
-- Knowledge lives in `data/medical_docs/*.txt`: 53 MedlinePlus lab-test pages (U.S. National Library of Medicine, public domain, credited) plus 6 short project notes. See [data/SOURCES.md](data/SOURCES.md). Files are split into ~500-character chunks (50 overlap, cut at word boundaries).
+- Knowledge lives in `data/medical_docs/*.txt`: 113 MedlinePlus lab-test pages (blood count, chemistry, liver, kidney, thyroid, vitamins, hormones, urine, heart and clotting markers, tumour markers, infection tests; U.S. National Library of Medicine, public domain, credited) plus 6 short project notes (1,645 chunks). See [data/SOURCES.md](data/SOURCES.md). Files are split into ~500-character chunks (50 overlap, cut at word boundaries).
 - Chunks are embedded with `all-MiniLM-L6-v2` (384 dimensions, L2-normalised), so a FAISS inner-product index (`IndexFlatIP`) returns **cosine similarity**.
 - Only chunks scoring ≥ `MIN_SIMILARITY` (0.45) are used, so an unrelated question retrieves nothing instead of the "least bad" chunk.
 - The index is saved to `backend/vector_store/` and re-used on the next start. A SHA-256 fingerprint of the knowledge files, chunk settings and embedding model decides whether it must be rebuilt, so editing a `.txt` file is picked up automatically.
@@ -93,7 +93,7 @@ backend\venv\Scripts\python evals\retrieval_eval.py     # no API key needed
 backend\venv\Scripts\python evals\agent_eval.py         # needs the stack running and Gemini quota
 ```
 
-**Retrieval** (`evals/retrieval_eval.py`): 40 questions whose answer should be in the knowledge base (each with the acceptable source pages) plus 10 unrelated or uncovered questions that should return nothing, run against the real index (724 chunks from 59 documents).
+**Retrieval** (`evals/retrieval_eval.py`): 40 questions whose answer should be in the knowledge base (each with the acceptable source pages) plus 10 unrelated or uncovered questions that should return nothing, run against the real index (1,645 chunks from 119 documents).
 
 | Similarity threshold | hit@1 | hit@3 | MRR | unrelated questions correctly rejected |
 |---|---|---|---|---|
@@ -102,7 +102,7 @@ backend\venv\Scripts\python evals\agent_eval.py         # needs the stack runnin
 | 0.50 | 0.95 | 0.95 | 0.95 | 100 % |
 | 0.55 | 0.85 | 0.85 | 0.85 | 100 % |
 
-Reading it honestly: with 59 documents, medical-sounding questions the knowledge base does not cover ("what causes high blood pressure", "symptoms of a heart attack") now score 0.47-0.49, just above the threshold, so 2 of 10 unrelated questions retrieve a loosely related passage. Raising the threshold to 0.50 rejects all of them but loses correct answers; 0.45 was kept because an irrelevant passage is mostly harmless (the model can ignore it) while a missed one loses information. The questions are hand-written by the author, so this is a regression guard, not a benchmark.
+Reading it honestly: with 119 documents (the knowledge base was doubled and the numbers below did not move: hit@1 98 %, hit@3 100 %), medical-sounding questions the knowledge base does not cover ("what causes high blood pressure", "symptoms of a heart attack", which now retrieves the troponin page, a reasonable match) score 0.47-0.50, just above the threshold, so 2 of 10 unrelated questions retrieve a loosely related passage. Raising the threshold to 0.50 rejects all of them but loses correct answers; 0.45 was kept because an irrelevant passage is mostly harmless (the model can ignore it) while a missed one loses information. The questions are hand-written by the author, so this is a regression guard, not a benchmark.
 
 **Synthetic lab reports** (`evals/generate_reports.py`, `evals/pipeline_eval.py`): a seeded generator writes random PDFs (35 tests with name variants, units and per-sex ranges; 9 layouts including two-column, grouped tables, flag letters, no status column, and scanned images) together with an answer key. The real pipeline (PDF text, parser, normaliser, rule engine) is scored against the key, then the real embedding model checks that every truly abnormal test finds an explanation page. Nothing here calls the AI.
 
@@ -110,15 +110,27 @@ Reading it honestly: with 59 documents, medical-sounding questions the knowledge
 |---|---|---|---|---|
 | First run (seed 7, 138 text reports, 918 tests) | 73 % / - | - | 12 / 12 | - |
 | After parser fixes, tuned on this seed | 100 % / 100 % | 100 % | 12 / 12 | - |
-| **Fresh holdout (seed 2024, 189 text reports, 1,298 tests)** | **100 % / 100 %** | **100 %** | **11 / 11** | 95 % before, **100 %** after (168 tests) |
+| Fresh holdout (seed 2024, 189 text reports, 1,298 tests) | 100 % / 100 % | 100 % | 11 / 11 | 95 % before, 100 % after (168 tests) |
 
 What the failures taught: a PDF font turned the en dash in `98 - 107` into a middle dot, so ranges were not parsed (parser now accepts dash variants, `to` and `~`); names that start with digits (`25-OH Vitamin D`); units containing digits on the range line (`mL/min/1.73m2 > 60`); a name and value on one line with the unit below; and a flag letter glued to the value (`27 L` then `U/L`, once read as unit `L U/L`). The first fix round was tuned on seed 7, so the fresh seed was the real test: it found three more misses (a flag after the value on a unit-and-range line, and a name-value-flag line), which were fixed and are now unit tests. The knowledge-coverage misses were all abbreviations (TG, HCT, HDL-C, FBS, PLT, Hb, PCV), fixed by spelling the abbreviation out in the search query. Limits: the generator and the parser were written by the same person, so 100 % means "handles every layout I thought of", not "handles every lab in the world"; real-world formats will still surprise it.
 
 **Live AI on synthetic reports** (`evals/ai_sample_eval.py`): the full pipeline including Gemini on randomly chosen synthetic reports, checked against each answer key: a valid structured answer came back, it explains exactly the truly abnormal tests (none missing, none invented, right Low/High), sources are attached when something is abnormal, and overall risk is "low" when nothing is abnormal. API errors are reported as `ERROR`, not failures. Latest run (8 reports from the holdout seed, 4 layouts, 0-4 abnormal tests each): **8 / 8 passed, 0 API errors**. This is a small sample that uses Gemini quota; it checks which tests are flagged and in which direction, not whether the explanation text is medically good.
 
+**Second round: harder, more realistic reports.** A real CBC report (flag letter between name and value) broke the parser even though the synthetic eval scored 100 %, so the generator was extended with what real labs print: a flag before the value, `Up to 5.6`, `(13 - 17)`, `13 to 17`, a unit after the range, one range per sex (`M: 13.5-17.5 F: 12-15.5`, resolved with the patient's sex read from the header), results below the detection limit (`<0.5`), several ways of writing sex and age, and 15 more tests (hormones, troponin, LDH, amylase, lipase, tumour markers...). On the first harder batch (seed 31, 243 text reports, 1,641 tests) the old parser found **82 %**; after the fixes it finds **100 %**. Two follow-up bugs came from a third fresh batch (seed 77, 289 reports, 2,083 tests): a result like `<23.2` looks like a range and was mistaken for the anchor of the test above it (fixed: lines already used by a record cannot start another), and a flag before the value on a "unit + range" line. All four batches (seeds 7, 2024, 31, 77; 859 text reports, 5,940 tests) now score 100 % found, 100 % fully correct, 0 extra findings, and knowledge coverage on the third batch is 242 / 242 abnormal tests (100 %, with the 15 new tests and 42 new pages).
+
+**Scans and photos** (`evals/scan_eval.py`, live Gemini): the 30 synthetic "scanned" reports are images with no text. The app tries the exact parser first and, if the file has no readable text, Gemini copies the printed values (name, value, unit, range, flag); the rule engine still decides Low / Normal / High. The result carries a warning, and names any test whose printed flag disagrees with the calculated status (the best sign of a misread digit).
+
+| Image quality | Reports | Tests found | Fully correct (name, value, unit, range) |
+|---|---|---|---|
+| Clean scan (~100 dpi) | 10 | 77 / 77 | **77 / 77 (100 %)** |
+| Mediocre phone photo (~86 dpi, tilted up to 3 degrees, JPEG quality 40-55) | 9 (1 API overload, not counted) | 68 / 68 | **67 / 68 (99 %)** |
+| Stress test (~45 dpi, JPEG quality 22-40; text a few pixels tall) | 10 | 76 / 77 | **48 / 77 (62 %)**, 9 of 10 reports had at least one misread value |
+
+Read this honestly: the AI is reliable on clear images and unreliable on very poor ones, where it misreads digits. That is why AI-read results are always labelled and why a mismatch with the report's own flag is surfaced. The images are synthetic renders of text, not real photographs with shadows, folds or handwriting, so real-world accuracy will be lower.
+
 **Chat agent** (`evals/agent_eval.py`): 14 questions through the live API, scored by rules: the right tool was chosen, the answer contains the expected facts, it contains no invented number, no diagnosis or dosage, and off-topic or "ignore your instructions" requests are refused. API errors (quota, outage) are reported as `ERROR` and are never counted as failures. Results are written to `evals/results/agent_<label>.json`.
 
-**Latest full run** (final stack: 59-document MedlinePlus knowledge base, default model chain, 14 questions, no API errors): **14 / 14 passed**. Exact calculations 2/2, knowledge retrieval 2/2, no invented values 1/1, off-topic and prompt-injection refusals 2/2, no diagnosis / no dosage 2/2, concise summary 1/1, tool choice and grounding 4/4. History, stated plainly: the first clean run scored 13/14; the one miss was a correct answer ("145 mg/dL, which is above the reference range") that my check rejected because it expected the word "high". I widened that check to accept "above" and "elevated", and the later full run passed every case. Because that check was changed after seeing a result, treat 13/14 as the unbiased figure and 14/14 as the current regression baseline. Rule-based checks on a small set are a regression guard, not proof of clinical safety.
+**Latest full run** (stack at the time: 59-document MedlinePlus knowledge base, default model chain, 14 questions, no API errors): **14 / 14 passed**. Exact calculations 2/2, knowledge retrieval 2/2, no invented values 1/1, off-topic and prompt-injection refusals 2/2, no diagnosis / no dosage 2/2, concise summary 1/1, tool choice and grounding 4/4. History, stated plainly: the first clean run scored 13/14; the one miss was a correct answer ("145 mg/dL, which is above the reference range") that my check rejected because it expected the word "high". I widened that check to accept "above" and "elevated", and the later full run passed every case. Because that check was changed after seeing a result, treat 13/14 as the unbiased figure and 14/14 as the current regression baseline. Rule-based checks on a small set are a regression guard, not proof of clinical safety.
 
 ## Gemini models and fallback
 
@@ -168,7 +180,7 @@ Every report belongs to a user. Nothing is visible without logging in.
 
 Send the token as `Authorization: Bearer <token>`. In the interactive docs (`/docs`) use the **Authorize** button.
 
-Errors are explicit: `400` not a PDF, `401` not logged in, `404` unknown or not your report, `409` email already registered, `413` too large (limit 10 MB), `422` invalid input / no lab results / scanned PDF, `429` rate limit.
+Errors are explicit: `400` not a PDF, PNG or JPG, `401` not logged in, `404` unknown or not your report, `409` email already registered, `413` too large (limit 10 MB), `422` invalid input / no lab results could be read, `429` rate limit.
 
 ## Safety and robustness
 
@@ -191,6 +203,10 @@ Every item below was a real failure found while building or testing, with what c
 | `WHITE BLOOD CELL COUNT 10.2` skipped | Name and value were on one line with the unit on the next | New `NAME_VALUE_RE` handles that layout |
 | Unit read as `L U/L` and `L mL/min/1.73m2` | A flag letter glued to the value (`27 L`, then `U/L` on the next line) was treated as part of the unit | New `VALUE_FLAG_RE` splits the flag off the value and uses it as the status |
 | Abnormal `TG`, `HCT`, `HDL-C`, `FBS`, `PLT`, `Hb`, `PCV` found no explanation page (coverage 95 %) | The knowledge pages use full names; the search query used the printed abbreviation | `expand_abbreviations` spells the abbreviation out in the query and keeps the original (`query_builder.py`). Coverage 100 % |
+| Reports with a different range per sex (`M: 13.5-17.5 F: 12-15.5`) were skipped or judged with the wrong range | The range regex only knew one range per cell, and the parser never read the patient's sex | `detect_sex` reads Gender / Sex / `Age / Sex : 27 YRS / M` from the header and the normaliser picks that sex's range (the widest range when the sex is unknown), in `parser_service.py` / `normalizer_service.py` |
+| `<0.5` results and `Up to 5.6`, `(13 - 17)` ranges were not understood | Values and ranges were plain numbers only | A qualifier (`<` / `>`) is kept with the value; the rule engine judges it only when that is enough to decide (`calculate_status_for_limit`), otherwise the test is not judged |
+| A censored result such as `<23.2` created a bogus finding named `mg/dL` | It looks like a range, so it was treated as the anchor of the test above it | Lines already used by a record cannot start another record (`_cell_records`) |
+| Scanned PDFs and photos were rejected (422) | No OCR | Gemini copies the printed values when there is no text layer (`vision_service.py`); the rules still judge them, and the result is labelled and cross-checked against the report's own flags |
 | Real CBC PDF: `LYMPHOCYTE`, `MONOCYTES`, `MCHC` came out named just `L` / `H` (values and statuses were right) | The lab prints name, **flag**, value, unit, range one per line; the parser assumed the flag comes after the range, so it took the flag letter as the test name. My synthetic generator never put the flag before the value, so it could not catch this | `FLAG_ONLY_RE`: a lone flag line before the value is used as the status and the line above it as the name (`parser_service.py`), with a regression test. Found by uploading a real report, not by the synthetic eval |
 
 Lesson from this round: after tuning on one random seed the parser scored 100 %, but a fresh seed found three more misses. Always test on data you did not tune on.
@@ -213,14 +229,14 @@ Lesson from this round: after tuning on one random seed the parser scored 100 %,
 
 ## Known limitations (honest list)
 
-- **PDF layouts:** the parser understands "one test per line" and "one table cell per line" layouts. Reports with very different layouts, multi-column pages or scanned images (no OCR) are not supported yet and return a clear `422`.
-- **Knowledge base is limited to lab-test pages** (53 MedlinePlus pages + 6 notes). Answers are only as good as these documents; conditions, drugs and non-lab topics are not covered, and a medical professional should review the content before any real use.
+- **Report formats:** the exact parser understands one-test-per-line and one-cell-per-line layouts, flag letters before or after the value, sex-specific ranges, `<0.5` results and several range styles. Anything else (scans, photos, unknown layouts) is copied by Gemini, which is accurate on clear images but misreads digits on very poor ones (see below), so those reports carry a visible warning. Qualitative results ("Positive" / "Negative"), tests without a numeric range, and multi-band ranges ("Desirable < 200, Borderline 200-239") are not judged yet. Only adult-style ranges printed on the report are used; the app never applies its own ranges.
+- **Knowledge base is limited to lab-test pages** (113 MedlinePlus pages + 6 notes). Answers are only as good as these documents; conditions, drugs and non-lab topics are not covered, and a medical professional should review the content before any real use.
 - Reports are stored as local JSON files; there is no authentication or database yet.
 - Reference ranges come from the report itself and are not adjusted for age or sex.
 
 ## Roadmap
 
-OCR for scanned reports · more knowledge documents and sources · database + authentication · streaming answers · deployment.
+qualitative results (Positive / Negative) · multi-band ranges · more document sources · streaming answers.
 
 ---
 

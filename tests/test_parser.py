@@ -193,3 +193,18 @@ class RealWorldVariantTests(unittest.TestCase):
 
     def test_unit_glued_to_range(self):
         self.assertIn("eGFR", self.analyse("eGFR\n85\nmL/min/1.73m2>60"))
+
+
+class AnchorTests(unittest.TestCase):
+
+    def names(self, text):
+        return {r["parameter"] for r in parse_report(text)}
+
+    def test_censored_value_is_not_taken_for_a_range(self):
+        text = "HDL\n55\nmg/dL\n> 40\nLDL\n<23.2\nmg/dL\n< 100\nTriglycerides\n120\nmg/dL\n< 150\n"
+        self.assertEqual(self.names(text), {"HDL", "LDL", "Triglycerides"})
+
+    def test_flag_before_value_with_unit_glued_to_range(self):
+        rows = {r["parameter"]: r for r in parse_report("eGFR\nL\n45\nmL/min/1.73m2> 60\n")}
+        self.assertEqual(rows["eGFR"]["status"], "Low")
+        self.assertEqual(rows["eGFR"]["value"], "45 mL/min/1.73m2")

@@ -197,12 +197,85 @@ CATALOGUE = {
         "units": [("mm/hr", 1)], "range": {"M": (0, 15), "F": (0, 20)}, "decimals": 0,
         "docs": ["mplus_erythrocyte_sedimentation_rate_esr"],
     },
+    # ---------------- hormones ----------------
+    "cortisol": {
+        "panel": "hormones", "names": ["Cortisol", "Cortisol (Morning)", "Serum Cortisol"],
+        "units": [("ug/dL", 1), ("µg/dL", 1)], "range": {"*": (6.0, 23.0)}, "decimals": 1,
+        "docs": ["mplus_cortisol_test"],
+    },
+    "testosterone": {
+        "panel": "hormones", "names": ["Testosterone", "Testosterone, Total"],
+        "units": [("ng/dL", 1)], "range": {"M": (300, 1000), "F": (15, 70)}, "decimals": 0,
+        "docs": ["mplus_testosterone_levels_test"],
+    },
+    "prolactin": {
+        "panel": "hormones", "names": ["Prolactin", "PRL"],
+        "units": [("ng/mL", 1)], "range": {"M": (2.0, 18.0), "F": (2.0, 29.0)}, "decimals": 1,
+        "docs": ["mplus_prolactin_levels"],
+    },
+    "pth": {
+        "panel": "hormones", "names": ["PTH", "Parathyroid Hormone (Intact)"],
+        "units": [("pg/mL", 1)], "range": {"*": (15, 65)}, "decimals": 0,
+        "docs": ["mplus_parathyroid_hormone_pth_test"],
+    },
+    "psa": {
+        "panel": "hormones", "names": ["PSA", "PSA, Total", "Prostate Specific Antigen"],
+        "units": [("ng/mL", 1)], "range": {"*": (None, 4.0)}, "decimals": 2,
+        "docs": ["mplus_prostate_specific_antigen_psa_test"],
+    },
+    # ---------------- heart, pancreas and other chemistry ----------------
+    "troponin": {
+        "panel": "chemistry", "names": ["Troponin I", "Troponin"],
+        "units": [("ng/mL", 1)], "range": {"*": (None, 0.04)}, "decimals": 3,
+        "docs": ["mplus_troponin_test"],
+    },
+    "ck": {
+        "panel": "chemistry", "names": ["CPK", "Creatine Kinase", "CK, Total"],
+        "units": [("U/L", 1)], "range": {"*": (30, 200)}, "decimals": 0,
+        "docs": ["mplus_creatine_kinase_test"],
+    },
+    "ldh": {
+        "panel": "chemistry", "names": ["LDH", "Lactate Dehydrogenase"],
+        "units": [("U/L", 1)], "range": {"*": (140, 280)}, "decimals": 0,
+        "docs": ["mplus_lactate_dehydrogenase_ldh_test"],
+    },
+    "amylase": {
+        "panel": "chemistry", "names": ["Amylase", "Serum Amylase"],
+        "units": [("U/L", 1)], "range": {"*": (30, 110)}, "decimals": 0,
+        "docs": ["mplus_amylase_test"],
+    },
+    "lipase": {
+        "panel": "chemistry", "names": ["Lipase", "Serum Lipase"],
+        "units": [("U/L", 1)], "range": {"*": (13, 60)}, "decimals": 0,
+        "docs": ["mplus_lipase_tests"],
+    },
+    "d_dimer": {
+        "panel": "chemistry", "names": ["D-Dimer", "D Dimer"],
+        "units": [("ng/mL", 1)], "range": {"*": (None, 500)}, "decimals": 0,
+        "docs": ["mplus_d_dimer_test"],
+    },
+    "cea": {
+        "panel": "chemistry", "names": ["CEA", "Carcinoembryonic Antigen"],
+        "units": [("ng/mL", 1)], "range": {"*": (None, 3.0)}, "decimals": 1,
+        "docs": ["mplus_cea_test"],
+    },
+    "afp": {
+        "panel": "chemistry", "names": ["AFP", "Alpha Fetoprotein"],
+        "units": [("ng/mL", 1)], "range": {"*": (None, 10.0)}, "decimals": 1,
+        "docs": ["mplus_alpha_fetoprotein_afp_tumor_marker_test"],
+    },
+    "co2": {
+        "panel": "chemistry", "names": ["CO2", "Bicarbonate", "Carbon Dioxide, Total"],
+        "units": [("mmol/L", 1), ("mEq/L", 1)], "range": {"*": (23, 29)}, "decimals": 0,
+        "docs": ["mplus_carbon_dioxide_co2_in_blood"],
+    },
 }
 
 PANEL_TITLES = {
     "cbc": "COMPLETE BLOOD COUNT", "diabetes": "GLUCOSE / DIABETES", "lipid": "LIPID PROFILE",
     "thyroid": "THYROID FUNCTION", "liver": "LIVER FUNCTION TEST", "kidney": "KIDNEY FUNCTION TEST",
     "electrolytes": "ELECTROLYTES", "vitamins": "VITAMINS AND IRON", "inflammation": "INFLAMMATION MARKERS",
+    "hormones": "HORMONES", "chemistry": "SPECIAL CHEMISTRY",
 }
 
 PANELS = sorted(PANEL_TITLES)

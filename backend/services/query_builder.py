@@ -41,6 +41,17 @@ ABBREVIATIONS = {
     "crp": "C-reactive protein",
     "b12": "vitamin B12 cobalamin",
     "25-oh": "vitamin D 25-hydroxy",
+    "pt": "prothrombin time", "inr": "INR prothrombin time", "aptt": "partial thromboplastin time",
+    "ptt": "partial thromboplastin time", "psa": "prostate specific antigen",
+    "cea": "carcinoembryonic antigen", "afp": "alpha-fetoprotein", "ana": "antinuclear antibody",
+    "rf": "rheumatoid factor", "bnp": "natriuretic peptide", "ldh": "lactate dehydrogenase",
+    "cpk": "creatine kinase", "ck": "creatine kinase", "hscrp": "C-reactive protein", "hs-crp": "C-reactive protein",
+    "pth": "parathyroid hormone", "prl": "prolactin", "fsh": "follicle stimulating hormone",
+    "lh": "luteinizing hormone", "hcg": "pregnancy test hCG", "dhea-s": "DHEA sulfate",
+    "trop": "troponin", "tni": "troponin", "tibc": "iron tests total iron binding capacity",
+    "urea": "blood urea nitrogen", "creat": "creatinine", "na": "sodium", "k": "potassium", "cl": "chloride",
+    "ca": "calcium", "mg": "magnesium", "po4": "phosphate", "co2": "carbon dioxide bicarbonate",
+    "sgpt-alt": "alanine aminotransferase liver", "ddimer": "D-dimer",
 }
 
 

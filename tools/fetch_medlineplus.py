@@ -64,6 +64,30 @@ SLUGS = [
     "c-reactive-protein-crp-test", "erythrocyte-sedimentation-rate-esr",
     # understanding results
     "how-to-understand-your-lab-results", "fasting-for-a-blood-test", "what-you-need-to-know-about-blood-testing",
+    # urine, stool and fluids
+    "urinalysis", "urine-culture", "microalbumin-creatinine-ratio", "bilirubin-in-urine", "protein-in-urine",
+    "glucose-in-urine-test", "ketones-in-urine", "nitrites-in-urine", "blood-in-urine", "urobilinogen-in-urine",
+    "calcium-in-urine-test", "crystals-in-urine", "epithelial-cells-in-urine", "fecal-occult-blood-test-fobt",
+    "bacteria-culture-test",
+    # hormones
+    "cortisol-test", "testosterone-levels-test", "estrogen-levels-test", "progesterone-test", "prolactin-levels",
+    "follicle-stimulating-hormone-fsh-levels-test", "luteinizing-hormone-lh-levels-test",
+    "parathyroid-hormone-pth-test", "thyroid-antibody-tests", "dhea-sulfate-test", "pregnancy-test",
+    # heart and clotting
+    "troponin-test", "d-dimer-test", "prothrombin-time-test-and-inr-ptinr", "partial-thromboplastin-time-ptt-test",
+    "natriuretic-peptide-tests-bnp-nt-probnp", "lipoprotein-a-blood-test", "creatine-kinase-test",
+    "arterial-blood-gas-abg-test", "lactate-test",
+    # liver, pancreas, other chemistry
+    "amylase-test", "lipase-tests", "lactate-dehydrogenase-ldh-test", "ammonia-levels", "globulin-test",
+    "osmolality-tests", "anion-gap-blood-test", "carbon-dioxide-co2-in-blood", "alpha-1-antitrypsin-test",
+    "immunoglobulins-blood-test",
+    # tumour markers, infection and immunity
+    "prostate-specific-antigen-psa-test", "cea-test", "ca-125-blood-test-ovarian-cancer",
+    "alpha-fetoprotein-afp-tumor-marker-test", "ana-antinuclear-antibody-test", "rheumatoid-factor-rf-test",
+    "procalcitonin-test", "hiv-screening-test", "hepatitis-testing", "celiac-disease-screening",
+    "helicobacter-pylori-h-pylori-tests", "malaria-tests", "dengue-fever-test",
+    # blood disorders
+    "hemoglobin-electrophoresis", "g6pd-test", "blood-smear",
 ]
 
 SKIP_SECTIONS = {"references", "related health topics", "related medical tests", "related topics"}

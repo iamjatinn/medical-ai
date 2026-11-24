@@ -232,7 +232,8 @@ def render(rng, layout, tests, sex, age, upper, wide_range=False):
     # a two-sex range ("Male: 13.5-17.5 Female: 12-15.5") is wide: move the last column right
     x_status = 540 if wide_range else X_STATUS
 
-    shown = [dict(t, printed_name=t["printed_name"].upper() if upper else t["printed_name"]) for t in tests]
+    shown = [dict(t, printed_name=t["printed_name"].upper() if upper and len(t["printed_name"]) <= 20 else t["printed_name"])
+             for t in tests]
 
     for t, s in zip(tests, shown):
         t["printed_name"] = s["printed_name"]
